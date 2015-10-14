@@ -1,6 +1,8 @@
 # android-midisuite
 Android MIDI test programs and examples.
 
+This is not an official Google product.
+
 This is a suite of MIDI Apps that run on Android M or later.
 
 They are intended for use by OEMs for testing MIDI
