@@ -27,7 +27,8 @@ import java.io.IOException;
  */
 public class LoggingReceiver extends MidiReceiver {
     public static final String TAG = "MidiScope";
-    private static final long NANOS_PER_SECOND = 1000000000L;
+    private static final long NANOS_PER_MILLISECOND = 1000000L;
+    private static final long NANOS_PER_SECOND = NANOS_PER_MILLISECOND * 1000L;
     private long mStartTime;
     private ScopeLogger mLogger;
     private long mLastTimeStamp = 0;
@@ -48,11 +49,13 @@ public class LoggingReceiver extends MidiReceiver {
             sb.append(String.format("-----0----: "));
         } else {
             long monoTime = timestamp - mStartTime;
+            long delayTimeNanos = timestamp - System.nanoTime();
+            int delayTimeMillis = (int)(delayTimeNanos / NANOS_PER_MILLISECOND);
             double seconds = (double) monoTime / NANOS_PER_SECOND;
             // Mark timestamps that are out of order.
             sb.append((timestamp < mLastTimeStamp) ? "*" : " ");
             mLastTimeStamp = timestamp;
-            sb.append(String.format("%10.3f: ", seconds));
+            sb.append(String.format("%10.3f (%2d): ", seconds, delayTimeMillis));
         }
         sb.append(MidiPrinter.formatBytes(data, offset, count));
         sb.append(": ");
