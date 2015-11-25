@@ -15,7 +15,9 @@
 -->
 
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-        package="com.android.midisynthexample">
+        package="com.android.midisynthexample"
+        android:versionCode="1"
+        android:versionName="1.0">
 
     <uses-feature android:name="android.software.midi" android:required="true"/>
 
