@@ -16,8 +16,6 @@
 
 package com.android.miditools;
 
-import com.android.internal.annotations.GuardedBy;
-
 import java.util.SortedMap;
 import java.util.TreeMap;
 
@@ -26,7 +24,7 @@ import java.util.TreeMap;
  * Events may be written in any order.
  * Events will be read in sorted order.
  * Events with the same timestamp will be read in the order they were added.
- * 
+ *
  * Only one Thread can write into the buffer.
  * And only one Thread can read from the buffer.
  */
@@ -34,7 +32,6 @@ public class EventScheduler {
     private static final long NANOS_PER_MILLI = 1000000;
 
     private final Object lock = new Object();
-    @GuardedBy("lock")
     private SortedMap<Long, FastEventQueue> mEventBuffer;
     // This does not have to be guarded. It is only set by the writing thread.
     // If the reader sees a null right before being set then that is OK.

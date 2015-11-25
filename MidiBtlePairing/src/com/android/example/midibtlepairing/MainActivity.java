@@ -345,7 +345,7 @@ public class MainActivity extends Activity {
             Intent data) {
         if (requestCode == REQUEST_BLUETOOTH_SCAN && resultCode == RESULT_OK) {
             final BluetoothDevice fBluetoothDevice = (BluetoothDevice) data
-                    .getExtra("device");
+                    .getParcelableExtra("device");
             if (fBluetoothDevice != null) {
                 Log.i(TAG, "Bluetooth device name = "
                         + fBluetoothDevice.getName()
