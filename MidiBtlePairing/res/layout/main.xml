@@ -23,13 +23,11 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_margin="20dp"
-        android:textSize="24sp"
         android:text="@string/header_text"
         />
     <Button android:id="@+id/bluetooth_scan"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:textSize="18sp"
         android:text="@string/bluetooth_scan"
         />
     <TextView
@@ -38,7 +36,6 @@
         android:layout_height="wrap_content"
         android:gravity="center_vertical"
         android:text="@string/explain_btle_location"
-        android:textSize="24sp"
         />
     <ListView
         android:id="@+id/open_device_list"
