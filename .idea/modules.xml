@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="ProjectModuleManager">
+    <modules>
+      <module fileurl="file://$PROJECT_DIR$/MidiBtlePairing/MidiBtlePairing.iml" filepath="$PROJECT_DIR$/MidiBtlePairing/MidiBtlePairing.iml" />
+      <module fileurl="file://$PROJECT_DIR$/MidiKeyboard/MidiKeyboard.iml" filepath="$PROJECT_DIR$/MidiKeyboard/MidiKeyboard.iml" />
+      <module fileurl="file://$PROJECT_DIR$/MidiScope/MidiScope.iml" filepath="$PROJECT_DIR$/MidiScope/MidiScope.iml" />
+      <module fileurl="file://$PROJECT_DIR$/MidiSynthExample/MidiSynthExample.iml" filepath="$PROJECT_DIR$/MidiSynthExample/MidiSynthExample.iml" />
+      <module fileurl="file://$PROJECT_DIR$/MidiTools/MidiTools.iml" filepath="$PROJECT_DIR$/MidiTools/MidiTools.iml" />
+      <module fileurl="file://$PROJECT_DIR$/MidiTools/tests/tests.iml" filepath="$PROJECT_DIR$/MidiTools/tests/tests.iml" />
+    </modules>
+  </component>
+</project>
