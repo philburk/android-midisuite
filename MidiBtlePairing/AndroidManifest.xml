@@ -3,6 +3,10 @@
         android:versionCode="1"
         android:versionName="1.0">
 
+    <uses-sdk
+        android:minSdkVersion="23"
+        android:targetSdkVersion="23" />
+
     <uses-feature android:name="android.hardware.bluetooth_le" android:required="true"/>
     <uses-feature android:name="android.software.midi" android:required="true"/>
 

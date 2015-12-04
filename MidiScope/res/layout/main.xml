@@ -23,7 +23,6 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_margin="20dp"
-        android:textSize="24sp"
         android:text="@string/header_text"
         />
 
@@ -31,6 +30,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginTop="10dp"
+        android:layout_marginBottom="10dp"
         android:orientation="horizontal" >
 
         <CheckBox
@@ -39,10 +39,6 @@
             android:layout_height="wrap_content"
             android:text="@string/show_raw_text"
             android:onClick="onToggleShowRaw"
-            android:scaleX="1.5"
-            android:scaleY="1.5"
-            android:layout_marginLeft="30dp"
-            android:layout_marginRight="50dp"
             />
 
         <CheckBox
@@ -51,10 +47,6 @@
             android:layout_height="wrap_content"
             android:text="@string/lock_screen_text"
             android:onClick="onToggleScreenLock"
-            android:scaleX="1.5"
-            android:scaleY="1.5"
-            android:layout_marginLeft="30dp"
-            android:layout_marginRight="50dp"
             />
     </LinearLayout>
 
@@ -75,12 +67,14 @@
 
     <ScrollView android:id="@+id/scroll"
         android:layout_width="match_parent"
-        android:layout_height="0px"
+        android:layout_height="fill_parent"
         android:layout_weight="1" >
         <TextView android:id="@+id/log"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:textSize="18sp"
+            android:textSize="12dp"
             />
     </ScrollView>
+
+
 </LinearLayout>
