@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.android.miditools;
+package com.mobileer.miditools;
 
 import android.media.midi.MidiDeviceInfo;
 import android.media.midi.MidiManager;

@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.android.miditools;
+package com.mobileer.miditools;
 
 import android.media.midi.MidiReceiver;
 import android.media.midi.MidiSender;

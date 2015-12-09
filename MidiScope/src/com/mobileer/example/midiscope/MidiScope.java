@@ -20,7 +20,7 @@ import android.media.midi.MidiDeviceService;
 import android.media.midi.MidiDeviceStatus;
 import android.media.midi.MidiReceiver;
 
-import com.android.miditools.MidiFramer;
+import com.mobileer.miditools.MidiFramer;
 
 import java.io.IOException;
 

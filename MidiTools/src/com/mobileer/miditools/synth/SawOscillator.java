@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.android.miditools.synth;
+package com.mobileer.miditools.synth;
 
 public class SawOscillator extends SynthUnit {
     private float mPhase = 0.0f;

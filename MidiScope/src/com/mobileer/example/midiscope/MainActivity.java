@@ -26,10 +26,10 @@ import android.widget.CheckBox;
 import android.widget.ScrollView;
 import android.widget.TextView;
 
-import com.android.example.midiscope.R;
-import com.android.miditools.MidiFramer;
-import com.android.miditools.MidiOutputPortSelector;
-import com.android.miditools.MidiPortWrapper;
+import com.mobileer.example.midiscope.R;
+import com.mobileer.miditools.MidiFramer;
+import com.mobileer.miditools.MidiOutputPortSelector;
+import com.mobileer.miditools.MidiPortWrapper;
 
 import java.io.IOException;
 import java.util.LinkedList;

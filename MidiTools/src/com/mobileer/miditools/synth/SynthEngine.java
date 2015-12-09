@@ -14,15 +14,14 @@
  * limitations under the License.
  */
 
-package com.android.miditools.synth;
+package com.mobileer.miditools.synth;
 
 import android.media.midi.MidiReceiver;
 import android.util.Log;
 
-import com.android.miditools.MidiConstants;
-import com.android.miditools.MidiEventScheduler;
-import com.android.miditools.MidiEventScheduler.MidiEvent;
-import com.android.miditools.MidiFramer;
+import com.mobileer.miditools.MidiConstants;
+import com.mobileer.miditools.MidiEventScheduler;
+import com.mobileer.miditools.MidiFramer;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -167,11 +166,11 @@ public class SynthEngine extends MidiReceiver {
      */
     private void processMidiEvents() throws IOException {
         long now = System.nanoTime(); // TODO use audio presentation time
-        MidiEvent event = (MidiEvent) mEventScheduler.getNextEvent(now);
+        MidiEventScheduler.MidiEvent event = (MidiEventScheduler.MidiEvent) mEventScheduler.getNextEvent(now);
         while (event != null) {
             mFramer.send(event.data, 0, event.count, event.getTimestamp());
             mEventScheduler.addEventToPool(event);
-            event = (MidiEvent) mEventScheduler.getNextEvent(now);
+            event = (MidiEventScheduler.MidiEvent) mEventScheduler.getNextEvent(now);
         }
     }
 

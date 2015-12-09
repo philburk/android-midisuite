@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.android.miditools.synth;
+package com.mobileer.miditools.synth;
 
 /**
  * Sinewave oscillator.
@@ -35,7 +35,7 @@ public class SineOscillator extends SawOscillator {
     public static float fastSin(float currentPhase) {
 
         /* Wrap phase back into region where results are more accurate. */
-        float yp = (currentPhase > 0.5f) ? 1.0f - currentPhase 
+        float yp = (currentPhase > 0.5f) ? 1.0f - currentPhase
                 : ((currentPhase < (-0.5f)) ? (-1.0f) - currentPhase : currentPhase);
 
         float x = (float) (yp * Math.PI);

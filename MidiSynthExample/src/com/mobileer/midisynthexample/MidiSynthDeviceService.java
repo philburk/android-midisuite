@@ -20,7 +20,7 @@ import android.media.midi.MidiDeviceService;
 import android.media.midi.MidiDeviceStatus;
 import android.media.midi.MidiReceiver;
 
-import com.android.miditools.synth.SynthEngine;
+import com.mobileer.miditools.synth.SynthEngine;
 
 public class MidiSynthDeviceService extends MidiDeviceService {
     private static final String TAG = MainActivity.TAG;
