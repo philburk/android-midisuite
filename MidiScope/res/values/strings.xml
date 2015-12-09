@@ -16,7 +16,7 @@
 
 <resources>
 
-    <string name="header_text">Select a MIDI source or send messages to AndroidMidiScope.</string>
+    <string name="header_text">Select a MIDI source or send messages to Mobileer MIDI Scope.</string>
     <string name="button_clear">Clear Log</string>
     <string name="show_raw_text">Show raw</string>
     <string name="lock_screen_text">Keep Screen On</string>

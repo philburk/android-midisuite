@@ -15,9 +15,10 @@
 -->
 
 <devices>
-    <device manufacturer="AndroidTest"
+    <device
+        manufacturer="Mobileer"
         product="Scope"
-        name="AndroidMidiScope">
+        name="Mobileer MIDI Scope">
         <input-port name="input" />
     </device>
 </devices>

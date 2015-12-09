@@ -15,7 +15,7 @@
 -->
 
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-        package="com.android.midisynthexample"
+        package="com.mobileer.midisynthexample"
         android:versionCode="2"
         android:versionName="1.1">
 
@@ -28,7 +28,7 @@
     <application
         android:allowBackup="true"
         android:icon="@mipmap/ic_launcher">
-        <activity android:name="MainActivity" android:label="SynthExample">
+        <activity android:name="com.mobileer.midisynthexample.MainActivity" android:label="SynthExample">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.DEFAULT" />
@@ -37,7 +37,7 @@
             </intent-filter>
         </activity>
 
-        <service android:name="MidiSynthDeviceService"
+        <service android:name="com.mobileer.midisynthexample.MidiSynthDeviceService"
             android:permission="android.permission.BIND_MIDI_DEVICE_SERVICE">
             <intent-filter>
                 <action android:name="android.media.midi.MidiDeviceService" />

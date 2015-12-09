@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.android.midikeyboard;
+package com.mobileer.midikeyboard;
 
 import android.app.Activity;
 import android.content.pm.PackageManager;
@@ -24,6 +24,7 @@ import android.os.Bundle;
 import android.util.Log;
 import android.widget.Toast;
 
+import com.mobileer.midikeyboard.R;
 import com.android.miditools.MidiConstants;
 import com.android.miditools.MidiInputPortSelector;
 import com.android.miditools.MusicKeyboardView;

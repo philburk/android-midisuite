@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.android.example.midibtlepairing;
+package com.mobileer.example.midibtlepairing;
 
 import android.Manifest;
 import android.app.Activity;
@@ -39,6 +39,8 @@ import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.mobileer.example.midibtlepairing.R;
+
 import java.io.Closeable;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -49,7 +51,7 @@ import java.util.HashMap;
  */
 public class MainActivity extends Activity {
     private static final String TAG = "MidiBtlePairing";
-    private static final String PACKAGE_NAME = "com.android.example.midibtlepairing";
+    private static final String PACKAGE_NAME = "com.mobileer.example.midibtlepairing";
 
     private MidiManager mMidiManager;
     private OpenDeviceListAdapter mOpenDeviceListAdapter;

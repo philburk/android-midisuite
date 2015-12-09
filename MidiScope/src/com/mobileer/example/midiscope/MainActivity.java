@@ -14,19 +14,19 @@
  * limitations under the License.
  */
 
-package com.android.example.midiscope;
+package com.mobileer.example.midiscope;
 
 import android.app.Activity;
 import android.media.midi.MidiManager;
 import android.media.midi.MidiReceiver;
 import android.os.Bundle;
-import android.util.Log;
 import android.view.View;
 import android.view.WindowManager;
 import android.widget.CheckBox;
 import android.widget.ScrollView;
 import android.widget.TextView;
 
+import com.android.example.midiscope.R;
 import com.android.miditools.MidiFramer;
 import com.android.miditools.MidiOutputPortSelector;
 import com.android.miditools.MidiPortWrapper;
@@ -35,7 +35,7 @@ import java.io.IOException;
 import java.util.LinkedList;
 
 /*
- * App that provides a MIDI echo service.
+ * Print incoming MIDI messages to the screen.
  */
 public class MainActivity extends Activity implements ScopeLogger {
     private static final String TAG = "MidiScope";

@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.android.example.midibtlepairing;
+package com.mobileer.example.midibtlepairing;
 
 import android.Manifest;
 import android.app.Activity;
@@ -36,6 +36,8 @@ import android.widget.BaseAdapter;
 import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
+
+import com.mobileer.example.midibtlepairing.R;
 
 import java.util.ArrayList;
 import java.util.UUID;
