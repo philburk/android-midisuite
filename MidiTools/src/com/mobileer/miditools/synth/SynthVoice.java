@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.android.miditools.synth;
+package com.mobileer.miditools.synth;
 
 /**
  * Base class for a polyphonic synthesizer voice.

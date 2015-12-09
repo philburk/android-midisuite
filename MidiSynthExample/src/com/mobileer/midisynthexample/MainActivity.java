@@ -27,10 +27,9 @@ import android.view.WindowManager;
 import android.widget.CheckBox;
 import android.widget.Toast;
 
-import com.mobileer.midisynthexample.R;
-import com.android.miditools.MidiOutputPortConnectionSelector;
-import com.android.miditools.MidiPortConnector;
-import com.android.miditools.MidiTools;
+import com.mobileer.miditools.MidiOutputPortConnectionSelector;
+import com.mobileer.miditools.MidiPortConnector;
+import com.mobileer.miditools.MidiTools;
 
 /**
  * Simple synthesizer as a MIDI Device.

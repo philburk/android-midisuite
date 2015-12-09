@@ -14,10 +14,9 @@
  * limitations under the License.
  */
 
-package com.android.miditools;
+package com.mobileer.miditools;
 
 import android.media.midi.MidiReceiver;
-import android.util.Log;
 
 import java.io.IOException;
 

@@ -20,7 +20,7 @@ import android.media.midi.MidiDeviceInfo;
 import android.media.midi.MidiDeviceInfo.PortInfo;
 import android.os.Bundle;
 
-import com.android.miditools.MidiConstants;
+import com.mobileer.miditools.MidiConstants;
 
 /**
  * Format a MIDI message for printing.

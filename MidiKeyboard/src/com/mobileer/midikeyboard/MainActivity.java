@@ -24,10 +24,9 @@ import android.os.Bundle;
 import android.util.Log;
 import android.widget.Toast;
 
-import com.mobileer.midikeyboard.R;
-import com.android.miditools.MidiConstants;
-import com.android.miditools.MidiInputPortSelector;
-import com.android.miditools.MusicKeyboardView;
+import com.mobileer.miditools.MidiConstants;
+import com.mobileer.miditools.MidiInputPortSelector;
+import com.mobileer.miditools.MusicKeyboardView;
 
 import java.io.IOException;
 

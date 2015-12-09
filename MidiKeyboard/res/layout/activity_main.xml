@@ -39,7 +39,7 @@
             android:entries="@array/receivers" />
     </LinearLayout>
 
-    <com.android.miditools.MusicKeyboardView
+    <com.mobileer.miditools.MusicKeyboardView
         android:id="@+id/musicKeyboardView"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"

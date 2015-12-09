@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.android.miditools.synth;
+package com.mobileer.miditools.synth;
 
 import android.media.AudioFormat;
 import android.media.AudioManager;

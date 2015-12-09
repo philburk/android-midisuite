@@ -14,12 +14,11 @@
  * limitations under the License.
  */
 
-package com.android.miditools;
+package com.mobileer.miditools;
 
 import android.media.midi.MidiDeviceInfo;
 import android.media.midi.MidiDeviceInfo.PortInfo;
-import android.util.Log;
- 
+
 public class MidiPortWrapper {
     private MidiDeviceInfo mInfo;
     private int mPortIndex;
