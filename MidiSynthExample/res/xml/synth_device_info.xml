@@ -15,7 +15,7 @@
 -->
 
 <devices>
-    <device manufacturer="AndroidTest" product="SynthExample">
+    <device manufacturer="Mobileer" product="SynthExample">
         <input-port name="input" />
     </device>
 </devices>

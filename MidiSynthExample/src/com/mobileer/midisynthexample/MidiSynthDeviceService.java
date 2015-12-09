@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.android.midisynthexample;
+package com.mobileer.midisynthexample;
 
 import android.media.midi.MidiDeviceService;
 import android.media.midi.MidiDeviceStatus;

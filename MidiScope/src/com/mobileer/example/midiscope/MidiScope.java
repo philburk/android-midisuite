@@ -14,12 +14,11 @@
  * limitations under the License.
  */
 
-package com.android.example.midiscope;
+package com.mobileer.example.midiscope;
 
 import android.media.midi.MidiDeviceService;
 import android.media.midi.MidiDeviceStatus;
 import android.media.midi.MidiReceiver;
-import android.util.Log;
 
 import com.android.miditools.MidiFramer;
 

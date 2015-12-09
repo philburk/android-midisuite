@@ -1,5 +1,5 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-        package="com.android.example.midibtlepairing"
+        package="com.mobileer.example.midibtlepairing"
         android:versionCode="2"
         android:versionName="1.1">
 
@@ -17,7 +17,7 @@
     <application
         android:allowBackup="true"
         android:icon="@mipmap/ic_launcher">
-        <activity android:name="MainActivity" android:label="MIDI+BTLE">
+        <activity android:name="com.mobileer.example.midibtlepairing.MainActivity" android:label="MIDI+BTLE">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.DEFAULT" />
@@ -26,7 +26,7 @@
             </intent-filter>
         </activity>
 
-        <activity android:name="com.android.example.midibtlepairing.DeviceScanActivity"
+        <activity android:name="com.mobileer.example.midibtlepairing.DeviceScanActivity"
               android:label="@string/app_name" />
 
     </application>

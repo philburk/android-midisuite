@@ -14,41 +14,23 @@
  * limitations under the License.
  */
 
-package com.android.midisynthexample;
+package com.mobileer.midisynthexample;
 
 import android.app.Activity;
 import android.content.pm.PackageManager;
-import android.media.midi.MidiDevice;
 import android.media.midi.MidiDevice.MidiConnection;
 import android.media.midi.MidiDeviceInfo;
-import android.media.midi.MidiInputPort;
 import android.media.midi.MidiManager;
-import android.media.midi.MidiReceiver;
 import android.os.Bundle;
-import android.os.Handler;
-import android.os.Looper;
-import android.os.Message;
-import android.util.Log;
-import android.view.MotionEvent;
 import android.view.View;
 import android.view.WindowManager;
-import android.widget.Button;
 import android.widget.CheckBox;
-import android.widget.ScrollView;
-import android.widget.TextView;
 import android.widget.Toast;
 
-import com.android.miditools.MidiEventThread;
-import com.android.miditools.MidiInputPortSelector;
+import com.mobileer.midisynthexample.R;
 import com.android.miditools.MidiOutputPortConnectionSelector;
-import com.android.miditools.MidiOutputPortSelector;
 import com.android.miditools.MidiPortConnector;
-import com.android.miditools.MidiPortSelector;
-import com.android.miditools.MidiPortWrapper;
 import com.android.miditools.MidiTools;
-
-import java.io.IOException;
-import java.util.LinkedList;
 
 /**
  * Simple synthesizer as a MIDI Device.
@@ -78,7 +60,7 @@ public class MainActivity extends Activity {
         // Setup MIDI
         mMidiManager = (MidiManager) getSystemService(MIDI_SERVICE);
 
-        MidiDeviceInfo synthInfo =  MidiTools.findDevice(mMidiManager, "AndroidTest",
+        MidiDeviceInfo synthInfo =  MidiTools.findDevice(mMidiManager, "Mobileer",
                 "SynthExample");
         int portIndex = 0;
         mPortSelector = new MidiOutputPortConnectionSelector(mMidiManager, this,
