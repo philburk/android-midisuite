@@ -1,7 +1,7 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
         package="com.android.example.midibtlepairing"
-        android:versionCode="1"
-        android:versionName="1.0">
+        android:versionCode="2"
+        android:versionName="1.1">
 
     <uses-sdk
         android:minSdkVersion="23"
@@ -14,7 +14,9 @@
     <uses-permission android:name="android.permission.BLUETOOTH_ADMIN"/>
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION"/>
 
-    <application>
+    <application
+        android:allowBackup="true"
+        android:icon="@mipmap/ic_launcher">
         <activity android:name="MainActivity" android:label="MIDI+BTLE">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
