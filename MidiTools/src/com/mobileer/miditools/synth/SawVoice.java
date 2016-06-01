@@ -23,9 +23,9 @@ public class SawVoice extends SynthVoice {
     private SawOscillator mOscillator;
     private EnvelopeADSR mEnvelope;
 
-    public SawVoice() {
+    public SawVoice(int sampleRate) {
         mOscillator = createOscillator();
-        mEnvelope = new EnvelopeADSR();
+        mEnvelope = new EnvelopeADSR(sampleRate);
     }
 
     protected SawOscillator createOscillator() {

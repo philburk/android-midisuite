@@ -36,8 +36,7 @@ public class SynthEngine extends MidiReceiver {
 
     private static final String TAG = "SynthEngine";
 
-    public static final int FRAME_RATE = 48000;
-    private static final int FRAMES_PER_BUFFER = 240;
+    private static final int FRAMES_PER_BUFFER = 64;
     private static final int SAMPLES_PER_FRAME = 2;
 
     private boolean go;
@@ -54,15 +53,23 @@ public class SynthEngine extends MidiReceiver {
     private MidiFramer mFramer;
     private MidiReceiver mReceiver = new MyReceiver();
     private SimpleAudioOutput mAudioOutput;
+    private int mSampleRate = 48000;
+    private int mFramesPerBlock;
+    private int mMidiByteCount;
 
     public SynthEngine() {
         this(new SimpleAudioOutput());
     }
 
     public SynthEngine(SimpleAudioOutput audioOutput) {
+        mAudioOutput = audioOutput;
+        mSampleRate = audioOutput.getFrameRate();
         mReceiver = new MyReceiver();
         mFramer = new MidiFramer(mReceiver);
-        mAudioOutput = audioOutput;
+    }
+
+    public SimpleAudioOutput getAudioOutput() {
+        return mAudioOutput;
     }
 
     @Override
@@ -74,7 +81,13 @@ public class SynthEngine extends MidiReceiver {
                         timestamp);
             }
         }
+        mMidiByteCount += count;
     }
+
+    public void setFramesPerBlock(int framesPerBlock) {
+        mFramesPerBlock = framesPerBlock;
+    }
+
 
     private class MyReceiver extends MidiReceiver {
         @Override
@@ -108,7 +121,7 @@ public class SynthEngine extends MidiReceiver {
         @Override
         public void run() {
             try {
-                mAudioOutput.start(FRAME_RATE);
+                mAudioOutput.start(mFramesPerBlock);
                 onLoopStarted();
                 while (go) {
                     processMidiEvents();
@@ -214,9 +227,9 @@ public class SynthEngine extends MidiReceiver {
     public SynthVoice createVoice(int program) {
         // For every odd program number use a sine wave.
         if ((program & 1) == 1) {
-            return new SineVoice();
+            return new SineVoice(mSampleRate);
         } else {
-            return new SawVoice();
+            return new SawVoice(mSampleRate);
         }
     }
 
@@ -279,5 +292,13 @@ public class SynthEngine extends MidiReceiver {
             mThread = null;
             mEventScheduler = null;
         }
+    }
+
+    public LatencyController getLatencyController() {
+        return mAudioOutput.getLatencyController();
+    }
+
+    public int getMidiByteCount() {
+        return mMidiByteCount;
     }
 }

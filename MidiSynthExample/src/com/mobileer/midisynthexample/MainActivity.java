@@ -17,19 +17,25 @@
 package com.mobileer.midisynthexample;
 
 import android.app.Activity;
+import android.content.pm.ActivityInfo;
 import android.content.pm.PackageManager;
 import android.media.midi.MidiDevice.MidiConnection;
 import android.media.midi.MidiDeviceInfo;
 import android.media.midi.MidiManager;
 import android.os.Bundle;
+import android.os.Handler;
+import android.util.Log;
 import android.view.View;
 import android.view.WindowManager;
 import android.widget.CheckBox;
+import android.widget.LinearLayout;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import com.mobileer.miditools.MidiOutputPortConnectionSelector;
 import com.mobileer.miditools.MidiPortConnector;
 import com.mobileer.miditools.MidiTools;
+import com.mobileer.miditools.synth.LatencyController;
 
 /**
  * Simple synthesizer as a MIDI Device.
@@ -39,6 +45,22 @@ public class MainActivity extends Activity {
 
     private MidiManager mMidiManager;
     private MidiOutputPortConnectionSelector mPortSelector;
+    private LatencyController mLatencyController;
+    private TextView mLatencyLog;
+    private LinearLayout mLatencyLayout;
+    private Handler mLatencyHandler;
+    private CheckBox mLatencyCheckBox;
+    private CheckBox mOptimizeSizeCheckBox;
+    private FakeKeyGenerator mFakeKeyGenerator;
+
+    private Runnable mLatencyRunnable = new Runnable() {
+        @Override
+        public void run() {
+            updateStatusView();
+            // Repeat several times per second.
+            mLatencyHandler.postDelayed(mLatencyRunnable, 1000 / 5);
+        }
+    };
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -46,12 +68,59 @@ public class MainActivity extends Activity {
 
         setContentView(R.layout.main);
 
+        // Lock to portrait to avoid onCreate being called more than once
+        setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE);
+
+        mLatencyCheckBox = (CheckBox) findViewById(R.id.checkbox_low_latency);
+        mOptimizeSizeCheckBox = (CheckBox) findViewById(R.id.checkbox_optimize);
+        mLatencyLog = (TextView) findViewById(R.id.text_latency);
+        mLatencyLayout = (LinearLayout) findViewById(R.id.layout_latency);
+
+        mLatencyController = MidiSynthDeviceService.getLatencyController();
+        if (!mLatencyController.isLowLatencySupported()) {
+            mLatencyLayout.setVisibility(View.GONE);
+        }
+        // Create the Handler object (on the main thread by default)
+        mLatencyHandler = new Handler();
+
+        // Generate fake key events to keep CPU from being slowed down.
+        mFakeKeyGenerator = new FakeKeyGenerator();
+
+        // Is Android MIDI supported?
         if (getPackageManager().hasSystemFeature(PackageManager.FEATURE_MIDI)) {
             setupMidi();
         } else {
             Toast.makeText(MainActivity.this,
                     "MIDI not supported!", Toast.LENGTH_LONG)
                     .show();
+        }
+    }
+
+    // Display information about the audio output latency.
+    private void updateStatusView() {
+        String text = "Buffering " + mLatencyController.getBufferSizeInFrames()
+                + " of "
+                + mLatencyController.getBufferCapacityInFrames() + " frames.\n";
+        text += "Underruns = " + mLatencyController.getUnderrunCount() + "\n";
+        text += "MIDI bytes = " + MidiSynthDeviceService.getMidiByteCount() + "\n";
+        text += "CPU load = " + mLatencyController.getCpuLoad() + "%";
+        mLatencyLog.setText(text);
+        // Can't change flag when running.
+        mLatencyCheckBox.setEnabled(!mLatencyController.isRunning());
+    }
+
+    @Override
+     public void onWindowFocusChanged(boolean hasFocus) {
+        super.onWindowFocusChanged(hasFocus);
+        if (hasFocus) {
+            // Start updating the latency view.
+            mLatencyHandler.post(mLatencyRunnable);
+            // Start generating fake key events.
+            mFakeKeyGenerator.start();
+        } else {
+            // Stop the background tasks.
+            mLatencyHandler.removeCallbacks(mLatencyRunnable);
+            mFakeKeyGenerator.stop();
         }
     }
 
@@ -69,6 +138,7 @@ public class MainActivity extends Activity {
 
     private void closeSynthResources() {
         if (mPortSelector != null) {
+            Log.i(TAG,"closeSynthResources() closing port ==========================");
             mPortSelector.close();
         }
     }
@@ -97,7 +167,6 @@ public class MainActivity extends Activity {
         }
     }
 
-
     public void onToggleScreenLock(View view) {
         boolean checked = ((CheckBox) view).isChecked();
         if (checked) {
@@ -109,8 +178,19 @@ public class MainActivity extends Activity {
         }
     }
 
+    public void onToggleLowLatency(View view) {
+        boolean checked = ((CheckBox) view).isChecked();
+        mLatencyController.setLowLatencyEnabled(checked);
+    }
+
+    public void onToggleAutoSize(View view) {
+        boolean checked = ((CheckBox) view).isChecked();
+        mLatencyController.setAutoSizeEnabled(checked);
+    }
+
     @Override
     public void onDestroy() {
+        Log.i(TAG,"onDestroy() called ==========================");
         closeSynthResources();
         super.onDestroy();
     }
