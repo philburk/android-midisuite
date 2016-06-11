@@ -28,13 +28,15 @@ import java.lang.reflect.Method;
  * Optimize the buffer size for an AudioTrack based on the underrun count.
  * <p/>
  * This feature was added in N. So we check for the methods using reflection.
+ * If you are targeting N or later then you could just call the new methods directly.
  */
 public class AudioLatencyTuner {
     private static final String TAG = "AudioLatencyTuner";
-    private static boolean lowLatencySupported;
     private static final int STATE_PRIMING = 0;
     private static final int STATE_LOWERING = 1;
     private static final int STATE_RAISING = 2;
+
+    private static boolean mLowLatencySupported; // N or later?
 
     // These are found using reflection.
     private static int mFlagLowLatency; // AudioAttributes.FLAG_LOW_LATENCY
@@ -43,18 +45,21 @@ public class AudioLatencyTuner {
     private static Method mGetUnderrunCountMethod = null;
 
     private final int mInitialSize;
+    private final AudioTrack mAudioTrack;
+    private final int mFramesPerBlock;
+
     private int mState = STATE_PRIMING;
-    private AudioTrack mAudioTrack;
     private int mPreviousUnderrunCount;
-    private int mFramesPerBlock = 64;
 
     static {
         reflectAdvancedMethods();
     }
 
-    public AudioLatencyTuner(AudioTrack track) {
+    public AudioLatencyTuner(AudioTrack track, int framesPerBlock) {
         mAudioTrack = track;
         mInitialSize = track.getBufferSizeInFrames();
+        mFramesPerBlock = framesPerBlock;
+        reset();
     }
 
     /**
@@ -64,9 +69,9 @@ public class AudioLatencyTuner {
         try {
             Field field = AudioAttributes.class.getField("FLAG_LOW_LATENCY");
             mFlagLowLatency = field.getInt(AudioAttributes.class);
-            lowLatencySupported = true;
+            mLowLatencySupported = true;
         } catch (NoSuchFieldException e) {
-            lowLatencySupported = false;
+            mLowLatencySupported = false;
         } catch (IllegalAccessException e) {
             e.printStackTrace();
         }
@@ -144,7 +149,6 @@ public class AudioLatencyTuner {
             try {
                 Object result = mSetBufferSizeMethod.invoke(mAudioTrack, thresholdFrames);
                 int actual = ((Integer) result).intValue();
-                Log.i(TAG, "setThresholdInFrames(" + thresholdFrames + ") returned " + actual);
                 return actual;
             } catch (IllegalAccessException e) {
                 e.printStackTrace();
@@ -155,16 +159,12 @@ public class AudioLatencyTuner {
         return mInitialSize;
     }
 
-    public void setFramesPerBlock(int framesPerBlock) {
-        mFramesPerBlock = framesPerBlock;
-    }
-
     public int getBufferSizeInFrames() {
         return mAudioTrack.getBufferSizeInFrames();
     }
 
     public static boolean isLowLatencySupported() {
-        return lowLatencySupported;
+        return mLowLatencySupported;
     }
 
     public static int getLowLatencyFlag() {
@@ -172,10 +172,8 @@ public class AudioLatencyTuner {
     }
 
     public void reset() {
-        if (!lowLatencySupported) {
-            return;
-        }
         mState = STATE_PRIMING;
+        mPreviousUnderrunCount = 0;
         setBufferSizeInFrames(mInitialSize);
     }
 
@@ -185,7 +183,7 @@ public class AudioLatencyTuner {
      * Then it raises the latency until the underruns stop.
      */
     public void update() {
-        if (!lowLatencySupported) {
+        if (!mLowLatencySupported) {
             return;
         }
         int nextState = mState;
@@ -220,13 +218,17 @@ public class AudioLatencyTuner {
         mState = nextState;
     }
 
-    private boolean incrementThreshold(int delta) {
+    /**
+     * Raise or lower the buffer size in blocks.
+     * @return true if the size did not change
+     */
+    private boolean incrementThreshold(int deltaBlocks) {
         int original = getBufferSizeInFrames();
         int numBlocks = original / mFramesPerBlock;
-        numBlocks += delta;
+        numBlocks += deltaBlocks;
         int target = numBlocks * mFramesPerBlock;
         int actual = setBufferSizeInFrames(target);
-        Log.i(TAG, "Threshold changed from " + original + " to " + actual);
+        Log.i(TAG, "Buffer size changed from " + original + " to " + actual);
         return actual == original;
     }
 

@@ -68,7 +68,8 @@ public class MainActivity extends Activity {
 
         setContentView(R.layout.main);
 
-        // Lock to portrait to avoid onCreate being called more than once
+        // Lock to portrait to avoid onCreate being called more than once.
+        // TODO Use a Fragment to handle this more gracefully.
         setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE);
 
         mLatencyCheckBox = (CheckBox) findViewById(R.id.checkbox_low_latency);
@@ -77,9 +78,16 @@ public class MainActivity extends Activity {
         mLatencyLayout = (LinearLayout) findViewById(R.id.layout_latency);
 
         mLatencyController = MidiSynthDeviceService.getLatencyController();
-        if (!mLatencyController.isLowLatencySupported()) {
+        if (mLatencyController.isLowLatencySupported()) {
+            // Start out with low latency.
+            mLatencyCheckBox.setChecked(true);
+            mLatencyController.setLowLatencyEnabled(true);
+            mOptimizeSizeCheckBox.setChecked(true);
+            mLatencyController.setAutoSizeEnabled(true);
+        } else {
             mLatencyLayout.setVisibility(View.GONE);
         }
+
         // Create the Handler object (on the main thread by default)
         mLatencyHandler = new Handler();
 
@@ -98,12 +106,15 @@ public class MainActivity extends Activity {
 
     // Display information about the audio output latency.
     private void updateStatusView() {
-        String text = "Buffering " + mLatencyController.getBufferSizeInFrames()
-                + " of "
-                + mLatencyController.getBufferCapacityInFrames() + " frames.\n";
-        text += "Underruns = " + mLatencyController.getUnderrunCount() + "\n";
-        text += "MIDI bytes = " + MidiSynthDeviceService.getMidiByteCount() + "\n";
-        text += "CPU load = " + mLatencyController.getCpuLoad() + "%";
+        String text = "";
+        if (mLatencyController.isRunning()){
+            text = "Buffering " + mLatencyController.getBufferSizeInFrames()
+                    + " of "
+                    + mLatencyController.getBufferCapacityInFrames() + " frames.\n";
+            text += "Underruns = " + mLatencyController.getUnderrunCount() + "\n";
+            text += "Single CPU load = " + mLatencyController.getCpuLoad() + "%\n";
+        }
+        text += "MIDI bytes = " + MidiSynthDeviceService.getMidiByteCount();
         mLatencyLog.setText(text);
         // Can't change flag when running.
         mLatencyCheckBox.setEnabled(!mLatencyController.isRunning());

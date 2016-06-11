@@ -29,7 +29,6 @@ public class MidiSynthDeviceService extends MidiDeviceService {
     private static final String TAG = MainActivity.TAG;
     private static SynthEngine mSynthEngine = new SynthEngine();
     private boolean mSynthStarted = false;
-    private int mFramesPerBlock;
     private static MidiSynthDeviceService mInstance;
 
     @Override
@@ -42,13 +41,9 @@ public class MidiSynthDeviceService extends MidiDeviceService {
     // Query the system for the best sample rate and buffer size for low latency.
     public void queryOptimalAudioSettings() {
         AudioManager audioManager = (AudioManager) getSystemService(Context.AUDIO_SERVICE);
-     //   String text = audioManager.getProperty(AudioManager.PROPERTY_OUTPUT_SAMPLE_RATE);
-     //   mSampleRate = Integer.parseInt(text);
-     //TODO   mSynthEngine.setSampleRate(mSampleRate);
         String text = audioManager.getProperty(AudioManager.PROPERTY_OUTPUT_FRAMES_PER_BUFFER);
-        mFramesPerBlock = 64; //TODO HACK - Integer.parseInt(text);
-
-        mSynthEngine.setFramesPerBlock(mFramesPerBlock);
+        int framesPerBlock = Integer.parseInt(text);
+        mSynthEngine.setFramesPerBlock(framesPerBlock);
     }
 
     @Override

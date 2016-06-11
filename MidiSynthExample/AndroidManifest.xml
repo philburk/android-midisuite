@@ -21,7 +21,7 @@
 
     <uses-sdk
         android:minSdkVersion="23"
-        android:targetSdkVersion="N" />
+        android:targetSdkVersion="23" />
 
     <uses-feature android:name="android.software.midi" android:required="true"/>
 

@@ -33,7 +33,15 @@ public class SimpleAudioOutput {
     public static final int SAMPLES_PER_FRAME = 2;
     public static final int BYTES_PER_SAMPLE = 4; // float
     public static final int BYTES_PER_FRAME = SAMPLES_PER_FRAME * BYTES_PER_SAMPLE;
-    private static final int AVERAGING_FACTOR = 31;
+    // Arbitrary weighting factor for CPU load filter. Higher number for slower response.
+    private static final int LOAD_FILTER_SHIFT = 6;
+    private static final int LOAD_FILTER_SCALER = (1<<LOAD_FILTER_SHIFT) - 1;
+    // LOW_LATENCY_BUFFER_CAPACITY_IN_FRAMES is only used when we do low latency tuning.
+    // The *3 is because some devices have a 1 msec period. And at
+    // 48000 Hz that is 48, which is 16*3.
+    // The 512 is arbitrary. 512*3 gives us a 32 msec buffer at 48000 Hz.
+    // That is more than we need but not hugely wasteful.
+    private static final int LOW_LATENCY_BUFFER_CAPACITY_IN_FRAMES = 512 * 3;
 
     private AudioTrack mAudioTrack;
     private int mFrameRate;
@@ -112,8 +120,11 @@ public class SimpleAudioOutput {
     public void start(int framesPerBlock) {
         stop();
         mAudioTrack = createAudioTrack();
+
+        mLatencyTuner = new AudioLatencyTuner(mAudioTrack, framesPerBlock);
+        // Use frame rate chosen by the AudioTrack so that we can get a
+        // low latency fast mixer track.
         mFrameRate = mAudioTrack.getSampleRate();
-        mLatencyTuner.setFramesPerBlock(framesPerBlock);
         // AudioTrack will wait until it has enough data before starting.
         mAudioTrack.play();
         previousBeginTime = 0;
@@ -125,13 +136,11 @@ public class SimpleAudioOutput {
     protected AudioTrack createAudioTrack() {
         AudioAttributes.Builder attributesBuilder = new AudioAttributes.Builder()
                 .setContentType(AudioAttributes.CONTENT_TYPE_MUSIC);
-        int bufferSizeInFrames = 128 * 3;
-        if (AudioLatencyTuner.isLowLatencySupported()
-                && mLatencyController.isLowLatencyEnabled()) {
+        boolean doLowLatency = (AudioLatencyTuner.isLowLatencySupported()
+                && mLatencyController.isLowLatencyEnabled());
+        if (doLowLatency) {
             Log.i(TAG, "createAudioTrack() using FLAG_LOW_LATENCY");
             attributesBuilder.setFlags(AudioLatencyTuner.getLowLatencyFlag());
-            // Start with a bigger buffer because we can lower it later.
-            bufferSizeInFrames = 512 * 3;
         }
         AudioAttributes attributes = attributesBuilder.build();
 
@@ -139,16 +148,19 @@ public class SimpleAudioOutput {
                 .setEncoding(AudioFormat.ENCODING_PCM_FLOAT)
                 .setChannelMask(AudioFormat.CHANNEL_OUT_STEREO)
                 .build();
-        AudioTrack track = new AudioTrack.Builder()
+        AudioTrack.Builder builder = new AudioTrack.Builder()
                 .setAudioAttributes(attributes)
-                .setAudioFormat(format)
-                .setBufferSizeInBytes(bufferSizeInFrames * BYTES_PER_FRAME)
-                .build();
+                .setAudioFormat(format);
+        if (doLowLatency) {
+            // Start with a bigger buffer because we can lower it later.
+            int bufferSizeInFrames = LOW_LATENCY_BUFFER_CAPACITY_IN_FRAMES;
+            builder.setBufferSizeInBytes(bufferSizeInFrames * BYTES_PER_FRAME);
+        }
+        AudioTrack track = builder.build();
         if (track == null) {
             throw new RuntimeException("Could not make the Audio Track! attributes = "
                     + attributes + ", format = " + format);
         }
-        mLatencyTuner = new AudioLatencyTuner(track);
         return track;
     }
 
@@ -168,8 +180,8 @@ public class SimpleAudioOutput {
         if (previousBeginTime > 0) {
             long elapsed = now - previousBeginTime;
             // recursive low pass filter
-            filteredCpuInterval = ((filteredCpuInterval * AVERAGING_FACTOR) + elapsed)
-                    / (AVERAGING_FACTOR + 1);
+            filteredCpuInterval = ((filteredCpuInterval * LOAD_FILTER_SCALER) + elapsed)
+                    >> LOAD_FILTER_SHIFT;
         }
 
     }
@@ -178,8 +190,8 @@ public class SimpleAudioOutput {
         if (previousBeginTime > 0) {
             long elapsed = now - previousBeginTime;
             // recursive low pass filter
-            filteredTotalInterval = ((filteredTotalInterval * AVERAGING_FACTOR) + elapsed)
-                    / (AVERAGING_FACTOR + 1);
+            filteredTotalInterval = ((filteredTotalInterval * LOAD_FILTER_SCALER) + elapsed)
+                    >> LOAD_FILTER_SHIFT;
         }
         previousBeginTime = now;
     }
