@@ -36,24 +36,28 @@ public class EnvelopeADSR extends SynthUnit {
     private float mDecayRate;
     private float mCurrent;
     private int mSstate = IDLE;
+    private int mSamplerate;
 
-    public EnvelopeADSR() {
+    public EnvelopeADSR( int sampleRate) {
+        mSamplerate = sampleRate;
         setAttackTime(0.003f);
         setDecayTime(0.08f);
         setSustainLevel(0.3f);
         setReleaseTime(1.0f);
     }
 
+
+
     public void setAttackTime(float time) {
         if (time < MIN_TIME)
             time = MIN_TIME;
-        mAttackRate = 1.0f / (SynthEngine.FRAME_RATE * time);
+        mAttackRate = 1.0f / (mSamplerate * time);
     }
 
     public void setDecayTime(float time) {
         if (time < MIN_TIME)
             time = MIN_TIME;
-        mDecayRate = 1.0f / (SynthEngine.FRAME_RATE * time);
+        mDecayRate = 1.0f / (mSamplerate * time);
     }
 
     public void setSustainLevel(float level) {
@@ -65,7 +69,7 @@ public class EnvelopeADSR extends SynthUnit {
     public void setReleaseTime(float time) {
         if (time < MIN_TIME)
             time = MIN_TIME;
-        mRreleaseRate = 1.0f / (SynthEngine.FRAME_RATE * time);
+        mRreleaseRate = 1.0f / (mSamplerate * time);
     }
 
     public void on() {

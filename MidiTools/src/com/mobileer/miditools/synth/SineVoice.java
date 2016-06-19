@@ -20,6 +20,10 @@ package com.mobileer.miditools.synth;
  * Replace sawtooth with a sine wave.
  */
 public class SineVoice extends SawVoice {
+    public SineVoice(int sampleRate) {
+        super(sampleRate);
+    }
+
     @Override
     protected SawOscillator createOscillator() {
         return new SineOscillator();

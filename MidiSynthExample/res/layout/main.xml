@@ -36,6 +36,40 @@
         android:entries="@array/senders"
         />
 
+    <LinearLayout
+        android:id="@+id/layout_latency"
+        android:orientation="vertical"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+
+        <CheckBox
+            android:id="@+id/checkbox_low_latency"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="FLAG_LOW_LATENCY"
+            android:onClick="onToggleLowLatency"
+            style="@android:style/TextAppearance.Large"
+            />
+
+        <CheckBox
+            android:id="@+id/checkbox_optimize"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Optimize Buffer Size"
+            android:onClick="onToggleAutoSize"
+            style="@android:style/TextAppearance.Large"
+            />
+
+    </LinearLayout>
+
+    <TextView
+        android:id="@+id/text_latency"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        style="@android:style/TextAppearance.Large"
+        android:text="xyz"
+        />
+
     <CheckBox
         android:id="@+id/lock_screen_checkbox"
         android:layout_width="wrap_content"

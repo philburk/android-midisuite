@@ -35,14 +35,13 @@ import java.util.Iterator;
 public class SynthEngine extends MidiReceiver {
 
     private static final String TAG = "SynthEngine";
-
-    public static final int FRAME_RATE = 48000;
-    private static final int FRAMES_PER_BUFFER = 240;
+    // 64 is the greatest common divisor of 192 and 128
+    private static final int DEFAULT_FRAMES_PER_BLOCK = 64;
     private static final int SAMPLES_PER_FRAME = 2;
 
-    private boolean go;
+    private volatile boolean mThreadEnabled;
     private Thread mThread;
-    private float[] mBuffer = new float[FRAMES_PER_BUFFER * SAMPLES_PER_FRAME];
+    private float[] mBuffer = null;
     private float mFrequencyScaler = 1.0f;
     private float mBendRange = 2.0f; // semitones
     private int mProgram;
@@ -54,17 +53,25 @@ public class SynthEngine extends MidiReceiver {
     private MidiFramer mFramer;
     private MidiReceiver mReceiver = new MyReceiver();
     private SimpleAudioOutput mAudioOutput;
+    private int mSampleRate;
+    private int mFramesPerBlock = DEFAULT_FRAMES_PER_BLOCK;
+    private int mMidiByteCount;
 
     public SynthEngine() {
         this(new SimpleAudioOutput());
     }
 
     public SynthEngine(SimpleAudioOutput audioOutput) {
+        mAudioOutput = audioOutput;
         mReceiver = new MyReceiver();
         mFramer = new MidiFramer(mReceiver);
-        mAudioOutput = audioOutput;
     }
 
+    public SimpleAudioOutput getAudioOutput() {
+        return mAudioOutput;
+    }
+
+    /* This will be called when MIDI data arrives. */
     @Override
     public void onSend(byte[] data, int offset, int count, long timestamp)
             throws IOException {
@@ -74,7 +81,17 @@ public class SynthEngine extends MidiReceiver {
                         timestamp);
             }
         }
+        mMidiByteCount += count;
     }
+
+    /**
+     * Call this before the engine is started.
+     * @param framesPerBlock
+     */
+    public void setFramesPerBlock(int framesPerBlock) {
+        mFramesPerBlock = framesPerBlock;
+    }
+
 
     private class MyReceiver extends MidiReceiver {
         @Override
@@ -108,13 +125,19 @@ public class SynthEngine extends MidiReceiver {
         @Override
         public void run() {
             try {
-                mAudioOutput.start(FRAME_RATE);
+                mAudioOutput.start(mFramesPerBlock);
+                mSampleRate = mAudioOutput.getFrameRate(); // rate is now valid
+                if (mBuffer == null) {
+                    mBuffer = new float[mFramesPerBlock * SAMPLES_PER_FRAME];
+                }
                 onLoopStarted();
-                while (go) {
+                // The safest way to exit from a thread is to check a variable.
+                while (mThreadEnabled) {
                     processMidiEvents();
                     generateBuffer();
-                    mAudioOutput.write(mBuffer, 0, mBuffer.length);
-                    onBufferCompleted(FRAMES_PER_BUFFER);
+                    float[] buffer = mBuffer;
+                    mAudioOutput.write(buffer, 0, buffer.length);
+                    onBufferCompleted(mFramesPerBlock);
                 }
             } catch (Exception e) {
                 Log.e(TAG, "SynthEngine background thread exception.", e);
@@ -126,7 +149,7 @@ public class SynthEngine extends MidiReceiver {
     }
 
     /**
-     * This is called form the synthesis thread before it starts looping.
+     * This is called from the synthesis thread before it starts looping.
      */
     public void onLoopStarted() {
     }
@@ -140,7 +163,7 @@ public class SynthEngine extends MidiReceiver {
     }
 
     /**
-     * This is called form the synthesis thread when it stop looping.
+     * This is called from the synthesis thread when it stops looping.
      */
     public void onLoopEnded() {
     }
@@ -175,11 +198,12 @@ public class SynthEngine extends MidiReceiver {
     }
 
     /**
-     *
+     * Mix the output of each active voice into a buffer.
      */
     private void generateBuffer() {
-        for (int i = 0; i < mBuffer.length; i++) {
-            mBuffer[i] = 0.0f;
+        float[] buffer = mBuffer;
+        for (int i = 0; i < buffer.length; i++) {
+            buffer[i] = 0.0f;
         }
         Iterator<SynthVoice> iterator = mVoices.values().iterator();
         while (iterator.hasNext()) {
@@ -188,7 +212,7 @@ public class SynthEngine extends MidiReceiver {
                 iterator.remove();
                 // mFreeVoices.add(voice);
             } else {
-                voice.mix(mBuffer, SAMPLES_PER_FRAME, 0.25f);
+                voice.mix(buffer, SAMPLES_PER_FRAME, 0.25f);
             }
         }
     }
@@ -214,9 +238,9 @@ public class SynthEngine extends MidiReceiver {
     public SynthVoice createVoice(int program) {
         // For every odd program number use a sine wave.
         if ((program & 1) == 1) {
-            return new SineVoice();
+            return new SineVoice(mSampleRate);
         } else {
-            return new SawVoice();
+            return new SawVoice(mSampleRate);
         }
     }
 
@@ -258,7 +282,7 @@ public class SynthEngine extends MidiReceiver {
      */
     public void start() {
         stop();
-        go = true;
+        mThreadEnabled = true;
         mThread = new Thread(new MyRunnable());
         mEventScheduler = new MidiEventScheduler();
         mThread.start();
@@ -268,7 +292,7 @@ public class SynthEngine extends MidiReceiver {
      * Stop the synthesizer.
      */
     public void stop() {
-        go = false;
+        mThreadEnabled = false;
         if (mThread != null) {
             try {
                 mThread.interrupt();
@@ -279,5 +303,13 @@ public class SynthEngine extends MidiReceiver {
             mThread = null;
             mEventScheduler = null;
         }
+    }
+
+    public LatencyController getLatencyController() {
+        return mAudioOutput.getLatencyController();
+    }
+
+    public int getMidiByteCount() {
+        return mMidiByteCount;
     }
 }
