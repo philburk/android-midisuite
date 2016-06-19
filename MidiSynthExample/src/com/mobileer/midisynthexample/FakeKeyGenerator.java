@@ -24,12 +24,14 @@ import java.util.TimerTask;
 
 /**
  * Generate fake key events so that the CPU speed will not get lowered.
- * This is useful if you are using a MIDI keyboard and no touching the screen.
+ * This is useful if you are using a MIDI keyboard and not touching the screen.
  */
 public class FakeKeyGenerator {
     public static final String TAG = "FakeKeyGenerator";
+    public static final int FAKE_KEY = KeyEvent.KEYCODE_BACKSLASH;
     private Timer mFakeKeyTimer;
     private FakeKeyTimerTask mFakeKeyTask;
+    private static Instrumentation instrumentation = new Instrumentation();
 
     static class FakeKeyTimerTask extends TimerTask {
         @Override
@@ -45,8 +47,7 @@ public class FakeKeyGenerator {
      */
     public static void sendFakeKeyEvent() {
         try {
-            Instrumentation instrumentation = new Instrumentation();
-            instrumentation.sendKeyDownUpSync(KeyEvent.KEYCODE_BACKSLASH);
+            instrumentation.sendKeyDownUpSync(FAKE_KEY);
         } catch(SecurityException e) {
             // Even though I was honoring window focus, I was still getting these exceptions.
             Log.e(TAG, "sendFakeKeyEvent() was out of focus");
