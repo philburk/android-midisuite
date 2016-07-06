@@ -47,8 +47,6 @@ public class MidiOutputPortSelector extends MidiPortSelector {
 
     @Override
     public void onPortSelected(final MidiPortWrapper wrapper) {
-        Log.i(TAG, "================ onPortSelected: " + wrapper);
-        new RuntimeException("FIXME - select port").printStackTrace();
         close();
 
         final MidiDeviceInfo info = wrapper.getDeviceInfo();
