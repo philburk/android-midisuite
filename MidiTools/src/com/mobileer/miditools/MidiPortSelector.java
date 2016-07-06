@@ -79,7 +79,7 @@ public abstract class MidiPortSelector extends DeviceCallback {
                 });
         mSpinner.setAdapter(mAdapter);
 
-        mMidiManager.registerDeviceCallback(this,
+        MidiDeviceMonitor.getInstance(mMidiManager).registerDeviceCallback(this,
                 new Handler(Looper.getMainLooper()));
 
         MidiDeviceInfo[] infos = mMidiManager.getDevices();
@@ -107,7 +107,7 @@ public abstract class MidiPortSelector extends DeviceCallback {
         for (int i = 0; i < portCount; ++i) {
             MidiPortWrapper wrapper = new MidiPortWrapper(info, mType, i);
             mAdapter.add(wrapper);
-            Log.i(MidiConstants.TAG, wrapper + " was added");
+            Log.i(MidiConstants.TAG, wrapper + " was added to " + this);
             mAdapter.notifyDataSetChanged();
         }
     }
@@ -172,7 +172,15 @@ public abstract class MidiPortSelector extends DeviceCallback {
     /**
      * Implement this method to clean up any open resources.
      */
-    public abstract void onClose();
+    public void onClose() {
+    }
+
+    /**
+     * Implement this method to clean up any open resources.
+     */
+    public void onDestroy() {
+        MidiDeviceMonitor.getInstance(mMidiManager).unregisterDeviceCallback(this);
+    }
 
     /**
      *

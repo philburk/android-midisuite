@@ -2,40 +2,38 @@
 
 ## Introduction
 
-Android MIDI test programs and examples.
+Android MIDI API test programs and examples that run on
+Android M or later.
+
+These are primary examples for developers to learn from.
+
+These may also be useful for OEMs to test MIDI on new devices.
 
 This is not an official Google product.
 
-This is a suite of MIDI Apps that run on Android M or later.
+## Apps
 
-They are intended for use by OEMs for testing MIDI
-on new devices. But they may also be of use to
-other developers.
+These apps can also be downloaded from the Google Play App Store.
 
-## Building
+MidiScope displays MIDI Messages on the screen.
+https://play.google.com/store/apps/details?id=com.mobileer.example.midiscope
 
-Requires a platform build environment; see
-[Building the System](https://source.android.com/source/building.html)
+MidiKeyboard display a simple on-screen music keyboard.
+https://play.google.com/store/apps/details?id=com.mobileer.midikeyboard
 
-After your platform build environment is initialized, type:
+MidiSynthExample is a simple sawtooth MIDI synthesizer.
+https://play.google.com/store/apps/details?id=com.mobileer.midisynthexample
 
-```
-mm
-```
+MidiBtlePairing pairs with Bluetooth MIDI devices.
+https://play.google.com/store/apps/details?id=com.mobileer.example.midibtlepairing
 
-The resulting APKs are located in $OUT/data/app/Midi\*/Midi\*.apk
+See the README files in the App directories for more information.
 
-## Directories
+## Library
 
 The MidiTools folder contain general purpose MIDI classes
 that are used by the other Apps.
 
-MidiScope displays MIDI Messages on the screen.
+## Building for App Developers
 
-MidiKeyboard display a simple on-screen music keyboard.
-
-MidiSynthExample is a simple sawtooth MIDI synthesizer.
-
-MidiBtlePairing pairs with Bluetooth MIDI devices.
-
-See the README files in the App directories for more information.
+You can load this project into Android Studio and build it there.

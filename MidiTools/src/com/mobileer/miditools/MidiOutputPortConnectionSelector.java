@@ -27,17 +27,20 @@ import java.io.IOException;
  * Select an output port and connect it to a destination input port.
  */
 public class MidiOutputPortConnectionSelector extends MidiPortSelector {
-
+    public final static String TAG = "MidiOutputPortConnectionSelector";
     private MidiPortConnector mSynthConnector;
     private MidiDeviceInfo mDestinationDeviceInfo;
     private int mDestinationPortIndex;
     private MidiPortConnector.OnPortsConnectedListener mConnectedListener;
 
     /**
+     * Create a selector for connecting to the destination input port.
+     *
      * @param midiManager
      * @param activity
      * @param spinnerId
-     * @param type
+     * @param destinationDeviceInfo
+     * @param destinationPortIndex
      */
     public MidiOutputPortConnectionSelector(MidiManager midiManager,
             Activity activity, int spinnerId,
@@ -50,7 +53,7 @@ public class MidiOutputPortConnectionSelector extends MidiPortSelector {
 
     @Override
     public void onPortSelected(final MidiPortWrapper wrapper) {
-        Log.i(MidiConstants.TAG, "connectPortToSynth: " + wrapper);
+        Log.i(TAG, "================ onPortSelected: " + wrapper);
         onClose();
         if (wrapper.getDeviceInfo() != null) {
             mSynthConnector = new MidiPortConnector(mMidiManager);
@@ -72,10 +75,11 @@ public class MidiOutputPortConnectionSelector extends MidiPortSelector {
         } catch (IOException e) {
             Log.e(MidiConstants.TAG, "Exception in closeSynthResources()", e);
         }
+        super.onClose();
     }
 
     /**
-     * @param myPortsConnectedListener
+     * @param connectedListener
      */
     public void setConnectedListener(
             MidiPortConnector.OnPortsConnectedListener connectedListener) {

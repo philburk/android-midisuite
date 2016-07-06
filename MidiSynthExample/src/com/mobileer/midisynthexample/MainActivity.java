@@ -70,7 +70,7 @@ public class MainActivity extends Activity {
 
         // Lock to portrait to avoid onCreate being called more than once.
         // TODO Use a Fragment to handle this more gracefully.
-        setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE);
+ //       setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE);
 
         mLatencyCheckBox = (CheckBox) findViewById(R.id.checkbox_low_latency);
         mOptimizeSizeCheckBox = (CheckBox) findViewById(R.id.checkbox_optimize);
@@ -151,6 +151,7 @@ public class MainActivity extends Activity {
         if (mPortSelector != null) {
             Log.i(TAG,"closeSynthResources() closing port ==========================");
             mPortSelector.close();
+            mPortSelector.onDestroy();
         }
     }
 

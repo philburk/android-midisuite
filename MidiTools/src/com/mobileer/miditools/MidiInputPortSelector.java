@@ -87,5 +87,6 @@ public class MidiInputPortSelector extends MidiPortSelector {
         } catch (IOException e) {
             Log.e(MidiConstants.TAG, "cleanup failed", e);
         }
+        super.onClose();
     }
 }
