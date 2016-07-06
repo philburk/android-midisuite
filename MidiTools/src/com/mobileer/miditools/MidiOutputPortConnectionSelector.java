@@ -31,6 +31,7 @@ public class MidiOutputPortConnectionSelector extends MidiPortSelector {
     private MidiPortConnector mSynthConnector;
     private MidiDeviceInfo mDestinationDeviceInfo;
     private int mDestinationPortIndex;
+    private MidiPortWrapper mLastWrapper;
     private MidiPortConnector.OnPortsConnectedListener mConnectedListener;
 
     /**
@@ -53,16 +54,18 @@ public class MidiOutputPortConnectionSelector extends MidiPortSelector {
 
     @Override
     public void onPortSelected(final MidiPortWrapper wrapper) {
-        Log.i(TAG, "================ onPortSelected: " + wrapper);
-        onClose();
-        if (wrapper.getDeviceInfo() != null) {
-            mSynthConnector = new MidiPortConnector(mMidiManager);
-            mSynthConnector.connectToDevicePort(wrapper.getDeviceInfo(),
-                    wrapper.getPortIndex(), mDestinationDeviceInfo,
-                    mDestinationPortIndex,
-                    // not safe on UI thread
-                    mConnectedListener, null);
+        if(!wrapper.equals(mLastWrapper)) {
+            onClose();
+            if (wrapper.getDeviceInfo() != null) {
+                mSynthConnector = new MidiPortConnector(mMidiManager);
+                mSynthConnector.connectToDevicePort(wrapper.getDeviceInfo(),
+                        wrapper.getPortIndex(), mDestinationDeviceInfo,
+                        mDestinationPortIndex,
+                        // not safe on UI thread
+                        mConnectedListener, null);
+            }
         }
+        mLastWrapper = wrapper;
     }
 
     @Override

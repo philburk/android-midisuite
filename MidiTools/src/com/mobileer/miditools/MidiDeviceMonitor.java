@@ -25,7 +25,6 @@ import android.os.Handler;
 import android.os.Looper;
 import android.util.Log;
 
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -38,18 +37,22 @@ import java.util.Map;
  * was rotated, and the Activity destroyed and recreated, the DeviceCallbacks would
  * accumulate in the MidiServer. This would result in multiple callbacks whenever a
  * device was added. This class allow an app to register and unregister multiple times
- * using a local list of callbacks. It serves as a proxy to the MidiManager. It registers
- * a single callback, which stays registered until the app is dead.
+ * using a local list of callbacks. It registers a single callback, which stays registered
+ * until the app is dead.
  *
  * This code checks to see if the N release is being used. N has a fix for the bug.
  * For N, the register and unregister calls are passed directly to the MidiManager.
+ *
+ * Note that this code is not thread-safe. It should only be called from the UI thread.
  */
 public class MidiDeviceMonitor {
     public final static String TAG = "MidiDeviceMonitor";
+
+    private static MidiDeviceMonitor mInstance;
     private MidiManager mMidiManager;
-    private static MidiDeviceMonitor instance;
-    private HashMap<DeviceCallback,Handler> mCallbacks = new HashMap<DeviceCallback,Handler>();
+    private HashMap<DeviceCallback, Handler> mCallbacks = new HashMap<DeviceCallback,Handler>();
     private MyDeviceCallback mMyDeviceCallback;
+    // We only need the workaround for versions before N.
     private boolean mUseProxy = Build.VERSION.SDK_INT <= Build.VERSION_CODES.M;
 
     // Use an inner class so we do not clutter the API of MidiDeviceMonitor
@@ -58,7 +61,6 @@ public class MidiDeviceMonitor {
 
         @Override
         public void onDeviceAdded(final MidiDeviceInfo device) {
-            Log.i(TAG, "onDeviceAdded( " + device + ")");
             // Call all of the locally registered callbacks.
             for(Map.Entry<DeviceCallback, Handler> item : mCallbacks.entrySet()) {
                 DeviceCallback callback = item.getKey();
@@ -78,7 +80,6 @@ public class MidiDeviceMonitor {
 
         @Override
         public void onDeviceRemoved(final MidiDeviceInfo device) {
-            Log.i(TAG, "onDeviceRemoved( " + device + ")");
             for(Map.Entry<DeviceCallback, Handler> item : mCallbacks.entrySet()) {
                 DeviceCallback callback = item.getKey();
                 Handler handler = item.getValue();
@@ -97,7 +98,6 @@ public class MidiDeviceMonitor {
 
         @Override
         public void onDeviceStatusChanged(final MidiDeviceStatus status) {
-            Log.i(TAG, "onDeviceStatusChanged( " + status + ")");
             for(Map.Entry<DeviceCallback, Handler> item : mCallbacks.entrySet()) {
                 DeviceCallback callback = item.getKey();
                 Handler handler = item.getValue();
@@ -126,14 +126,15 @@ public class MidiDeviceMonitor {
     }
 
     public static MidiDeviceMonitor getInstance(MidiManager midiManager) {
-        if (instance == null) {
-            instance = new MidiDeviceMonitor(midiManager);
+        if (mInstance == null) {
+            mInstance = new MidiDeviceMonitor(midiManager);
         }
-        return instance;
+        return mInstance;
     }
 
     public void registerDeviceCallback(DeviceCallback callback, Handler handler) {
         if (mUseProxy) {
+            // Keep our own list of callbacks.
             mCallbacks.put(callback, handler);
         } else {
             mMidiManager.registerDeviceCallback(callback, handler);
@@ -144,6 +145,7 @@ public class MidiDeviceMonitor {
         if (mUseProxy) {
             mCallbacks.remove(callback);
         } else {
+            // This works on N or later.
             mMidiManager.unregisterDeviceCallback(callback);
         }
     }

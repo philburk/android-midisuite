@@ -17,6 +17,7 @@
 package com.mobileer.midisynthexample;
 
 import android.app.Activity;
+import android.app.Fragment;
 import android.content.pm.ActivityInfo;
 import android.content.pm.PackageManager;
 import android.media.midi.MidiDevice.MidiConnection;
@@ -32,6 +33,7 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.mobileer.miditools.MidiDeviceMonitor;
 import com.mobileer.miditools.MidiOutputPortConnectionSelector;
 import com.mobileer.miditools.MidiPortConnector;
 import com.mobileer.miditools.MidiTools;
@@ -51,7 +53,6 @@ public class MainActivity extends Activity {
     private Handler mLatencyHandler;
     private CheckBox mLatencyCheckBox;
     private CheckBox mOptimizeSizeCheckBox;
-    private FakeKeyGenerator mFakeKeyGenerator;
 
     private Runnable mLatencyRunnable = new Runnable() {
         @Override
@@ -67,10 +68,6 @@ public class MainActivity extends Activity {
         super.onCreate(savedInstanceState);
 
         setContentView(R.layout.main);
-
-        // Lock to portrait to avoid onCreate being called more than once.
-        // TODO Use a Fragment to handle this more gracefully.
- //       setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE);
 
         mLatencyCheckBox = (CheckBox) findViewById(R.id.checkbox_low_latency);
         mOptimizeSizeCheckBox = (CheckBox) findViewById(R.id.checkbox_optimize);
@@ -90,9 +87,6 @@ public class MainActivity extends Activity {
 
         // Create the Handler object (on the main thread by default)
         mLatencyHandler = new Handler();
-
-        // Generate fake key events to keep CPU from being slowed down.
-        mFakeKeyGenerator = new FakeKeyGenerator();
 
         // Is Android MIDI supported?
         if (getPackageManager().hasSystemFeature(PackageManager.FEATURE_MIDI)) {
@@ -127,11 +121,11 @@ public class MainActivity extends Activity {
             // Start updating the latency view.
             mLatencyHandler.post(mLatencyRunnable);
             // Start generating fake key events.
-            mFakeKeyGenerator.start();
+            FakeKeyGenerator.getInstance().start();
         } else {
             // Stop the background tasks.
             mLatencyHandler.removeCallbacks(mLatencyRunnable);
-            mFakeKeyGenerator.stop();
+            FakeKeyGenerator.getInstance().stop();
         }
     }
 

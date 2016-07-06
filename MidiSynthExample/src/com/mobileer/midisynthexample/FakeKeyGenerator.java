@@ -16,6 +16,7 @@ package com.mobileer.midisynthexample;
  */
 
 import android.app.Instrumentation;
+import android.media.midi.MidiManager;
 import android.util.Log;
 import android.view.KeyEvent;
 
@@ -29,9 +30,12 @@ import java.util.TimerTask;
 public class FakeKeyGenerator {
     public static final String TAG = "FakeKeyGenerator";
     public static final int FAKE_KEY = KeyEvent.KEYCODE_BACKSLASH;
+
+    private static FakeKeyGenerator mInstance;
+    private static Instrumentation instrumentation = new Instrumentation();
+
     private Timer mFakeKeyTimer;
     private FakeKeyTimerTask mFakeKeyTask;
-    private static Instrumentation instrumentation = new Instrumentation();
 
     static class FakeKeyTimerTask extends TimerTask {
         @Override
@@ -40,18 +44,20 @@ public class FakeKeyGenerator {
         }
     };
 
+    public static FakeKeyGenerator getInstance() {
+        if (mInstance == null) {
+            mInstance = new FakeKeyGenerator();
+        }
+        return mInstance;
+    }
+
     /**
      * Post fake key event to keep CPU from throttling down.
      * This should be called at least once per second.
      * It should NOT be called on the UI thread!
      */
     public static void sendFakeKeyEvent() {
-        try {
-            instrumentation.sendKeyDownUpSync(FAKE_KEY);
-        } catch(SecurityException e) {
-            // Even though I was honoring window focus, I was still getting these exceptions.
-            Log.e(TAG, "sendFakeKeyEvent() was out of focus");
-        }
+        instrumentation.sendKeyDownUpSync(FAKE_KEY);
     }
 
     /**
