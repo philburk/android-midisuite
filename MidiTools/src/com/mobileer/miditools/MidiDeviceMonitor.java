@@ -125,7 +125,7 @@ public class MidiDeviceMonitor {
         }
     }
 
-    public static MidiDeviceMonitor getInstance(MidiManager midiManager) {
+    public synchronized static MidiDeviceMonitor getInstance(MidiManager midiManager) {
         if (mInstance == null) {
             mInstance = new MidiDeviceMonitor(midiManager);
         }
