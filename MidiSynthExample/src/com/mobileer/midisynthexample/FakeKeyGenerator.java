@@ -24,8 +24,14 @@ import java.util.Timer;
 import java.util.TimerTask;
 
 /**
- * Generate fake key events so that the CPU speed will not get lowered.
- * This is useful if you are using a MIDI keyboard and not touching the screen.
+ * Generate fake key events so that the CPU speed will not get lowered
+ * when the user is not touching the screen.
+ *
+ * This is useful if you are using a MIDI keyboard to control a synthesizer
+ * running on Android.
+ *
+ * This class uses the Singleton design pattern because there is no need
+ * to have more than one generator and only one View can have focus.
  */
 public class FakeKeyGenerator {
     public static final String TAG = "FakeKeyGenerator";
@@ -44,7 +50,11 @@ public class FakeKeyGenerator {
         }
     };
 
-    public static FakeKeyGenerator getInstance() {
+    // Prevent direct instantiation of this Singleton.
+    private FakeKeyGenerator() {
+    }
+
+    public synchronized static FakeKeyGenerator getInstance() {
         if (mInstance == null) {
             mInstance = new FakeKeyGenerator();
         }
@@ -62,6 +72,7 @@ public class FakeKeyGenerator {
 
     /**
      * Start a timer task that periodically generates a fake key input event.
+     * This should be called on the UI thread, usually from onWindowFocusChanged().
      */
     public void start() {
         stop(); // just in case start() is called twice in a row
@@ -72,6 +83,7 @@ public class FakeKeyGenerator {
 
     /**
      * Stop the fake key timer task if running.
+     * This should be called on the UI thread, usually from onWindowFocusChanged().
      */
     public void stop() {
         // Cancel the fake key events.
