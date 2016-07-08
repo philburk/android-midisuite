@@ -36,7 +36,7 @@ public class MidiPortConnector {
     private MidiConnection mConnection;
 
     /**
-     * @param mMidiManager
+     * @param midiManager
      */
     public MidiPortConnector(MidiManager midiManager) {
         mMidiManager = midiManager;
@@ -100,11 +100,14 @@ public class MidiPortConnector {
 
     /**
      * Open two devices and connect their ports.
+     * Then notify listener of the result.
      *
      * @param sourceDeviceInfo
      * @param sourcePortIndex
      * @param destinationDeviceInfo
      * @param destinationPortIndex
+     * @param listener
+     * @param handler
      */
     public void connectToDevicePort(final MidiDeviceInfo sourceDeviceInfo,
             final int sourcePortIndex,

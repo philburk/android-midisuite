@@ -72,7 +72,7 @@ public class MainActivity extends Activity implements ScopeLogger {
         mLogSenderSelector = new MidiOutputPortSelector(mMidiManager, this,
                 R.id.spinner_senders) {
 
-                @Override
+            @Override
             public void onPortSelected(final MidiPortWrapper wrapper) {
                 super.onPortSelected(wrapper);
                 if (wrapper != null) {

@@ -16,6 +16,7 @@ package com.mobileer.midisynthexample;
  */
 
 import android.app.Instrumentation;
+import android.media.midi.MidiManager;
 import android.util.Log;
 import android.view.KeyEvent;
 
@@ -23,15 +24,24 @@ import java.util.Timer;
 import java.util.TimerTask;
 
 /**
- * Generate fake key events so that the CPU speed will not get lowered.
- * This is useful if you are using a MIDI keyboard and not touching the screen.
+ * Generate fake key events so that the CPU speed will not get lowered
+ * when the user is not touching the screen.
+ *
+ * This is useful if you are using a MIDI keyboard to control a synthesizer
+ * running on Android.
+ *
+ * This class uses the Singleton design pattern because there is no need
+ * to have more than one generator and only one View can have focus.
  */
 public class FakeKeyGenerator {
     public static final String TAG = "FakeKeyGenerator";
     public static final int FAKE_KEY = KeyEvent.KEYCODE_BACKSLASH;
+
+    private static FakeKeyGenerator mInstance;
+    private static Instrumentation instrumentation = new Instrumentation();
+
     private Timer mFakeKeyTimer;
     private FakeKeyTimerTask mFakeKeyTask;
-    private static Instrumentation instrumentation = new Instrumentation();
 
     static class FakeKeyTimerTask extends TimerTask {
         @Override
@@ -40,22 +50,29 @@ public class FakeKeyGenerator {
         }
     };
 
+    // Prevent direct instantiation of this Singleton.
+    private FakeKeyGenerator() {
+    }
+
+    public synchronized static FakeKeyGenerator getInstance() {
+        if (mInstance == null) {
+            mInstance = new FakeKeyGenerator();
+        }
+        return mInstance;
+    }
+
     /**
      * Post fake key event to keep CPU from throttling down.
      * This should be called at least once per second.
      * It should NOT be called on the UI thread!
      */
     public static void sendFakeKeyEvent() {
-        try {
-            instrumentation.sendKeyDownUpSync(FAKE_KEY);
-        } catch(SecurityException e) {
-            // Even though I was honoring window focus, I was still getting these exceptions.
-            Log.e(TAG, "sendFakeKeyEvent() was out of focus");
-        }
+        instrumentation.sendKeyDownUpSync(FAKE_KEY);
     }
 
     /**
      * Start a timer task that periodically generates a fake key input event.
+     * This should be called on the UI thread, usually from onWindowFocusChanged().
      */
     public void start() {
         stop(); // just in case start() is called twice in a row
@@ -66,6 +83,7 @@ public class FakeKeyGenerator {
 
     /**
      * Stop the fake key timer task if running.
+     * This should be called on the UI thread, usually from onWindowFocusChanged().
      */
     public void stop() {
         // Cancel the fake key events.

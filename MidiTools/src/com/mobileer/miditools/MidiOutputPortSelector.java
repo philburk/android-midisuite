@@ -30,6 +30,7 @@ import java.io.IOException;
  * Manages a Spinner for selecting a MidiOutputPort.
  */
 public class MidiOutputPortSelector extends MidiPortSelector {
+    public final static String TAG = "MidiOutputPortSelector";
     private MidiOutputPort mOutputPort;
     private MidiDispatcher mDispatcher = new MidiDispatcher();
     private MidiDevice mOpenDevice;
@@ -46,7 +47,6 @@ public class MidiOutputPortSelector extends MidiPortSelector {
 
     @Override
     public void onPortSelected(final MidiPortWrapper wrapper) {
-        Log.i(MidiConstants.TAG, "onPortSelected: " + wrapper);
         close();
 
         final MidiDeviceInfo info = wrapper.getDeviceInfo();
@@ -87,6 +87,7 @@ public class MidiOutputPortSelector extends MidiPortSelector {
         } catch (IOException e) {
             Log.e(MidiConstants.TAG, "cleanup failed", e);
         }
+        super.onClose();
     }
 
     /**
