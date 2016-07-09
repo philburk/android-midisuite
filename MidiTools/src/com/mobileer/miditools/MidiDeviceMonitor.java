@@ -63,7 +63,7 @@ public class MidiDeviceMonitor {
         public void onDeviceAdded(final MidiDeviceInfo device) {
             // Call all of the locally registered callbacks.
             for(Map.Entry<DeviceCallback, Handler> item : mCallbacks.entrySet()) {
-                DeviceCallback callback = item.getKey();
+                final DeviceCallback callback = item.getKey();
                 Handler handler = item.getValue();
                 if(handler == null) {
                     callback.onDeviceAdded(device);
@@ -81,7 +81,7 @@ public class MidiDeviceMonitor {
         @Override
         public void onDeviceRemoved(final MidiDeviceInfo device) {
             for(Map.Entry<DeviceCallback, Handler> item : mCallbacks.entrySet()) {
-                DeviceCallback callback = item.getKey();
+                final DeviceCallback callback = item.getKey();
                 Handler handler = item.getValue();
                 if(handler == null) {
                     callback.onDeviceRemoved(device);
@@ -99,7 +99,7 @@ public class MidiDeviceMonitor {
         @Override
         public void onDeviceStatusChanged(final MidiDeviceStatus status) {
             for(Map.Entry<DeviceCallback, Handler> item : mCallbacks.entrySet()) {
-                DeviceCallback callback = item.getKey();
+                final DeviceCallback callback = item.getKey();
                 Handler handler = item.getValue();
                 if(handler == null) {
                     callback.onDeviceStatusChanged(status);
