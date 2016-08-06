@@ -24,11 +24,12 @@ import java.util.Timer;
 import java.util.TimerTask;
 
 /**
- * Generate fake key events so that the CPU speed will not get lowered
- * when the user is not touching the screen.
+ * Generate fake key events to prevent the CPU speed from being lowered
+ * when the user is not touching the screen. Note that this does not work
+ * on every Android Device.
  *
- * This is useful if you are using a MIDI keyboard to control a synthesizer
- * running on Android.
+ * This can sometimes help if you are using a MIDI keyboard to control a
+ * synthesizer running on Android.
  *
  * This class uses the Singleton design pattern because there is no need
  * to have more than one generator and only one View can have focus.
@@ -67,14 +68,20 @@ public class FakeKeyGenerator {
      * It should NOT be called on the UI thread!
      */
     public static void sendFakeKeyEvent() {
-        instrumentation.sendKeyDownUpSync(FAKE_KEY);
+        try {
+            instrumentation.sendKeyDownUpSync(FAKE_KEY);
+        } catch(SecurityException e) {
+            // Even though I am honoring window focus, I sometimes get this exception.
+            Log.e(TAG, "sendFakeKeyEvent() while out of focus, stopping fake key task");
+            getInstance().stop();
+        }
     }
 
     /**
      * Start a timer task that periodically generates a fake key input event.
      * This should be called on the UI thread, usually from onWindowFocusChanged().
      */
-    public void start() {
+    public synchronized void start() {
         stop(); // just in case start() is called twice in a row
         mFakeKeyTimer = new Timer();
         mFakeKeyTask = new FakeKeyTimerTask();
@@ -85,7 +92,7 @@ public class FakeKeyGenerator {
      * Stop the fake key timer task if running.
      * This should be called on the UI thread, usually from onWindowFocusChanged().
      */
-    public void stop() {
+    public synchronized void stop() {
         // Cancel the fake key events.
         if (mFakeKeyTimer != null) {
             mFakeKeyTimer.cancel();
