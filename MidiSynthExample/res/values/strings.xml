@@ -16,7 +16,7 @@
 
 <resources>
 
-    <string name="versionName">1.3</string>
+    <string name="versionName">1.4</string>
     <string name="synth_sender_text">Select Sender for Synth</string>
     <string name="error_port_busy">Selected port is in use or unavailable.</string>
     <string name="port_open_ok">Port opened OK.</string>
