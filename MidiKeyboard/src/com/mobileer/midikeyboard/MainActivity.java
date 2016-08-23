@@ -22,6 +22,11 @@ import android.media.midi.MidiManager;
 import android.media.midi.MidiReceiver;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.View;
+import android.widget.AdapterView;
+import android.widget.Button;
+import android.widget.Spinner;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import com.mobileer.miditools.MidiConstants;
@@ -39,7 +44,24 @@ public class MainActivity extends Activity {
 
     private MidiInputPortSelector mKeyboardReceiverSelector;
     private MusicKeyboardView mKeyboard;
+    private Button mProgramButton;
     private MidiManager mMidiManager;
+    private int mChannel; // ranges from 0 to 15
+    private int[] mPrograms = new int[MidiConstants.MAX_CHANNELS]; // ranges from 0 to 127
+    private byte[] mByteBuffer = new byte[3];
+
+    public class ChannelSpinnerActivity extends Activity implements AdapterView.OnItemSelectedListener {
+        @Override
+        public void onItemSelected(AdapterView<?> parent, View view,
+                                   int pos, long id) {
+            mChannel = pos & 0x0F;
+            updateProgramText();
+        }
+
+        @Override
+        public void onNothingSelected(AdapterView<?> parent) {
+        }
+    }
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -52,6 +74,11 @@ public class MainActivity extends Activity {
             Toast.makeText(this, "MIDI not supported!", Toast.LENGTH_LONG)
                     .show();
         }
+
+        mProgramButton = (Button) findViewById(R.id.button_program);
+
+        Spinner spinner = (Spinner) findViewById(R.id.spinner_channels);
+        spinner.setOnItemSelectedListener(new ChannelSpinnerActivity());
     }
 
     private void setupMidi() {
@@ -70,14 +97,41 @@ public class MainActivity extends Activity {
         mKeyboard.addMusicKeyListener(new MusicKeyboardView.MusicKeyListener() {
             @Override
             public void onKeyDown(int keyIndex) {
-                noteOn(0, keyIndex, DEFAULT_VELOCITY);
+                noteOn(mChannel, keyIndex, DEFAULT_VELOCITY);
             }
 
             @Override
             public void onKeyUp(int keyIndex) {
-                noteOff(0, keyIndex, DEFAULT_VELOCITY);
+                noteOff(mChannel, keyIndex, DEFAULT_VELOCITY);
             }
         });
+    }
+
+    public void onProgramSend(View view) {
+        midiCommand(MidiConstants.STATUS_PROGRAM_CHANGE + mChannel, mPrograms[mChannel]);
+    }
+
+    public void onProgramDelta(View view) {
+        Button button = (Button) view;
+        int delta = Integer.parseInt(button.getText().toString());
+        changeProgram(delta);
+    }
+
+    private void changeProgram(int delta) {
+        int program = mPrograms[mChannel];
+        program += delta;
+        if (program < 0) {
+            program = 0;
+        } else if (program > 127) {
+            program = 127;
+        }
+        midiCommand(MidiConstants.STATUS_PROGRAM_CHANGE + mChannel, program);
+        mPrograms[mChannel] = program;
+        updateProgramText();
+    }
+
+    private void updateProgramText() {
+        mProgramButton.setText("" + mPrograms[mChannel]);
     }
 
     private void noteOff(int channel, int pitch, int velocity) {
@@ -89,12 +143,18 @@ public class MainActivity extends Activity {
     }
 
     private void midiCommand(int status, int data1, int data2) {
-        byte[] buffer = new byte[3];
-        buffer[0] = (byte) status;
-        buffer[1] = (byte) data1;
-        buffer[2] = (byte) data2;
+        mByteBuffer[0] = (byte) status;
+        mByteBuffer[1] = (byte) data1;
+        mByteBuffer[2] = (byte) data2;
         long now = System.nanoTime();
-        midiSend(buffer, now);
+        midiSend(mByteBuffer, 3, now);
+    }
+
+    private void midiCommand(int status, int data1) {
+        mByteBuffer[0] = (byte) status;
+        mByteBuffer[1] = (byte) data1;
+        long now = System.nanoTime();
+        midiSend(mByteBuffer, 2, now);
     }
 
     private void closeSynthResources() {
@@ -110,8 +170,7 @@ public class MainActivity extends Activity {
         super.onDestroy();
     }
 
-    private void midiSend(byte[] buffer, long timestamp) {
-        int count = buffer.length;
+    private void midiSend(byte[] buffer, int count, long timestamp) {
         try {
             // send event immediately
             MidiReceiver receiver = mKeyboardReceiverSelector.getReceiver();

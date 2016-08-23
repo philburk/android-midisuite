@@ -58,6 +58,8 @@ public class MidiConstants {
     public final static int SYSTEM_BYTE_LENGTHS[] = { 1, 2, 3, 2, 1, 1, 1, 1, 1,
             1, 1, 1, 1, 1, 1, 1 };
 
+    public final static int MAX_CHANNELS = 16;
+
     /**
      * MIDI messages, except for SysEx, are 1,2 or 3 bytes long.
      * You can tell how long a MIDI message is from the first status byte.
