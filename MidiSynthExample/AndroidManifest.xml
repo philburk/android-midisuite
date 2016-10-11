@@ -16,7 +16,7 @@
 
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
         package="com.mobileer.midisynthexample"
-        android:versionCode="5"
+        android:versionCode="6"
         android:versionName="@string/versionName">
 
     <uses-sdk
