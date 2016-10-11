@@ -50,7 +50,7 @@ public class MainActivity extends Activity {
     private int[] mPrograms = new int[MidiConstants.MAX_CHANNELS]; // ranges from 0 to 127
     private byte[] mByteBuffer = new byte[3];
 
-    public class ChannelSpinnerActivity extends Activity implements AdapterView.OnItemSelectedListener {
+    public class ChannelSpinnerActivity implements AdapterView.OnItemSelectedListener {
         @Override
         public void onItemSelected(AdapterView<?> parent, View view,
                                    int pos, long id) {
