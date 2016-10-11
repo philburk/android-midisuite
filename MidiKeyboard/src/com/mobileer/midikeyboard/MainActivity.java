@@ -176,8 +176,6 @@ public class MainActivity extends Activity {
             MidiReceiver receiver = mKeyboardReceiverSelector.getReceiver();
             if (receiver != null) {
                 receiver.send(buffer, 0, count, timestamp);
-            } else {
-                Log.i(TAG, "Select receiver for keys.");
             }
         } catch (IOException e) {
             Log.e(TAG, "mKeyboardReceiverSelector.send() failed " + e);

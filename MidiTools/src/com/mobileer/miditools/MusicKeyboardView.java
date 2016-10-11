@@ -16,11 +16,14 @@
 
 package com.mobileer.miditools;
 
+import android.annotation.TargetApi;
 import android.content.Context;
 import android.graphics.Canvas;
 import android.graphics.Paint;
 import android.graphics.Rect;
+import android.os.Build;
 import android.util.AttributeSet;
+import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
 
@@ -34,6 +37,7 @@ import java.util.HashMap;
  * hit white keys.
  */
 public class MusicKeyboardView extends View {
+    private static final String TAG = "MusicKeyboardView";
     // Adjust proportions of the keys.
     private static final int WHITE_KEY_GAP = 10;
     private static final int PITCH_MIDDLE_C = 60;
@@ -205,6 +209,7 @@ public class MusicKeyboardView extends View {
         }
     }
 
+    @TargetApi(Build.VERSION_CODES.FROYO)
     @Override
     public boolean onTouchEvent(MotionEvent event) {
         super.onTouchEvent(event);
@@ -215,19 +220,36 @@ public class MusicKeyboardView extends View {
         // Get the pointer's current position
         float x = event.getX(pointerIndex);
         float y = event.getY(pointerIndex);
+        boolean handled =  false;
         switch (action) {
             case MotionEvent.ACTION_DOWN:
             case MotionEvent.ACTION_POINTER_DOWN:
                 onFingerDown(id, x, y);
+                handled = true;
                 break;
             case MotionEvent.ACTION_MOVE:
-                onFingerMove(id, x, y);
+                int pointerCount = event.getPointerCount();
+                for (int i = 0; i < pointerCount; i++) {
+                    id = event.getPointerId(i);
+                    x = event.getX(i);
+                    y = event.getY(i);
+                    onFingerMove(id, x, y);
+                }
+                handled = true;
                 break;
             case MotionEvent.ACTION_UP:
             case MotionEvent.ACTION_POINTER_UP:
                 onFingerUp(id, x, y);
+                handled = true;
+                break;
+            case MotionEvent.ACTION_CANCEL:
+                onAllFingersUp();
+                handled = true;
+                break;
+            default:
                 break;
         }
+
         // Must return true or we do not get the ACTION_MOVE and
         // ACTION_UP events.
         return true;
@@ -272,6 +294,14 @@ public class MusicKeyboardView extends View {
             int pitch = xyToPitch(x, y);
             fireKeyUp(pitch);
         }
+    }
+
+    private void onAllFingersUp() {
+        // Turn off all notes.
+        for (Integer pitch : mFingerMap.values()) {
+            fireKeyUp(pitch);
+        }
+        mFingerMap.clear();
     }
 
     private void fireKeyDown(int pitch) {

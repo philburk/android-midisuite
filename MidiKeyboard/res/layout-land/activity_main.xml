@@ -25,6 +25,14 @@
         android:orientation="horizontal">
 
         <TextView
+            android:id="@+id/text_version"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/versionName"
+            android:layout_marginRight="20dp"
+            />
+
+        <TextView
             android:id="@+id/text_receivers"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
@@ -111,6 +119,6 @@
         android:id="@+id/musicKeyboardView"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginTop="47dp" />
+        android:layout_marginTop="20dp" />
 
 </LinearLayout>
