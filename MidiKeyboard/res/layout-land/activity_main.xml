@@ -40,7 +40,7 @@
     <LinearLayout
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginTop="10dp"
+        android:layout_marginTop="20dp"
         android:orientation="horizontal">
 
         <TextView
@@ -54,57 +54,57 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:entries="@array/channels" />
-    </LinearLayout>
 
-    <LinearLayout
-        android:layout_width="fill_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="10dp"
-        android:orientation="horizontal"
-        android:weightSum="0.6">
-
-        <TextView
-            android:id="@+id/text_program_prompt"
-            android:layout_width="0dp"
+        <LinearLayout
+            android:layout_width="fill_parent"
             android:layout_height="wrap_content"
-            android:layout_weight="0.1"
-            android:text="@string/program_text" />
+            android:orientation="horizontal"
+            android:weightSum="0.7">
 
-        <Button
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="0.1"
-            android:onClick="onProgramDelta"
-            android:text="-10" />
+            <TextView
+                android:id="@+id/text_program_prompt"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="0.2"
+                android:text="@string/program_text" />
 
-        <Button
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="0.1"
-            android:onClick="onProgramDelta"
-            android:text="-1" />
+            <Button
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="0.1"
+                android:onClick="onProgramDelta"
+                android:text="-10" />
 
-        <Button
-            android:id="@+id/button_program"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="0.1"
-            android:onClick="onProgramSend"
-            android:text="0" />
+            <Button
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="0.1"
+                android:onClick="onProgramDelta"
+                android:text="-1" />
 
-        <Button
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="0.1"
-            android:onClick="onProgramDelta"
-            android:text="+1" />
+            <Button
+                android:id="@+id/button_program"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="0.1"
+                android:onClick="onProgramSend"
+                android:text="0" />
 
-        <Button
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="0.1"
-            android:onClick="onProgramDelta"
-            android:text="+10" />
+            <Button
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="0.1"
+                android:onClick="onProgramDelta"
+                android:text="+1" />
+
+            <Button
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="0.1"
+                android:onClick="onProgramDelta"
+                android:text="+10" />
+        </LinearLayout>
+
     </LinearLayout>
 
     <com.mobileer.miditools.MusicKeyboardView
