@@ -168,6 +168,7 @@ public class SimpleAudioOutput {
         endCpuLoadInterval();
         int result = mAudioTrack.write(buffer, offset, length,
                 AudioTrack.WRITE_BLOCKING);
+        // This thread just woke up and will now render some audio.
         beginCpuLoadInterval();
         if (result > 0 && mLatencyController.isAutoSizeEnabled()) {
             mLatencyTuner.update();

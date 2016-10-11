@@ -16,8 +16,10 @@
 
 package com.mobileer.miditools.synth;
 
+import android.annotation.TargetApi;
 import android.media.AudioAttributes;
 import android.media.AudioTrack;
+import android.os.Build;
 import android.util.Log;
 
 import java.lang.reflect.Field;
@@ -26,9 +28,14 @@ import java.lang.reflect.Method;
 
 /**
  * Optimize the buffer size for an AudioTrack based on the underrun count.
+ * Just call update() after every write() to the AudioTrack.
+ *
+ * The buffer size determines the latency.
+ * Lower the latency until there are glitches.
+ * Then raise the latency until the glitches stop.
+ *
  * <p/>
- * This feature was added in N. So we check for the methods using reflection.
- * If you are targeting N or later then you could just call the new methods directly.
+ * This feature was added in N. So we check for support based on the SDK version.
  */
 public class AudioLatencyTuner {
     private static final String TAG = "AudioLatencyTuner";
@@ -36,13 +43,7 @@ public class AudioLatencyTuner {
     private static final int STATE_LOWERING = 1;
     private static final int STATE_RAISING = 2;
 
-    private static boolean mLowLatencySupported; // N or later?
-
-    // These are found using reflection.
-    private static int mFlagLowLatency; // AudioAttributes.FLAG_LOW_LATENCY
-    private static Method mSetBufferSizeMethod = null;
-    private static Method mGetBufferCapacityMethod = null;
-    private static Method mGetUnderrunCountMethod = null;
+    private static boolean mLowLatencySupported = Build.VERSION.SDK_INT >= Build.VERSION_CODES.N;
 
     private final int mInitialSize;
     private final AudioTrack mAudioTrack;
@@ -51,10 +52,16 @@ public class AudioLatencyTuner {
     private int mState = STATE_PRIMING;
     private int mPreviousUnderrunCount;
 
-    static {
-        reflectAdvancedMethods();
-    }
-
+    /**
+     * An application can determine the optimal framesPerBlock as follows:
+     * <pre><code>
+     * String text = audioManager.getProperty(AudioManager.PROPERTY_OUTPUT_FRAMES_PER_BUFFER);
+     * int framesPerBlock = Integer.parseInt(text);
+     * </code></pre>
+     * @param track
+     * @param framesPerBlock Number of frames processed at one time by the mixer.
+     */
+    @TargetApi(23)
     public AudioLatencyTuner(AudioTrack track, int framesPerBlock) {
         mAudioTrack = track;
         mInitialSize = track.getBufferSizeInFrames();
@@ -63,78 +70,29 @@ public class AudioLatencyTuner {
     }
 
     /**
-     * Use Java reflection to find the methods added in the N release.
-     */
-    private static void reflectAdvancedMethods() {
-        try {
-            Field field = AudioAttributes.class.getField("FLAG_LOW_LATENCY");
-            mFlagLowLatency = field.getInt(AudioAttributes.class);
-            mLowLatencySupported = true;
-        } catch (NoSuchFieldException e) {
-            mLowLatencySupported = false;
-        } catch (IllegalAccessException e) {
-            e.printStackTrace();
-        }
-
-        Method[] methods = AudioTrack.class.getMethods();
-
-        for (Method method : methods) {
-            if (method.getName().equals("setBufferSizeInFrames")) {
-                mSetBufferSizeMethod = method;
-                break;
-            }
-        }
-
-        for (Method method : methods) {
-            if (method.getName().equals("getBufferCapacityInFrames")) {
-                mGetBufferCapacityMethod = method;
-                break;
-            }
-        }
-
-        for (Method method : methods) {
-            if (method.getName().equals("getUnderrunCount")) {
-                mGetUnderrunCountMethod = method;
-                break;
-            }
-        }
-    }
-
-    /**
+     * This only works on N or later versions of Android.
      * @return number of times the audio buffer underflowed and glitched.
      */
+    @TargetApi(24)
     public int getUnderrunCount() {
-        // Call using reflection.
-        if (mGetUnderrunCountMethod != null && mAudioTrack != null) {
-            try {
-                Object result = mGetUnderrunCountMethod.invoke(mAudioTrack);
-                int count = ((Integer) result).intValue();
-                return count;
-            } catch (IllegalAccessException e) {
-                e.printStackTrace();
-            } catch (InvocationTargetException e) {
-                e.printStackTrace();
-            }
+        if (mLowLatencySupported) {
+            return mAudioTrack.getUnderrunCount();
+        } else {
+            return 0;
         }
-        return 0;
     }
 
     /**
+     * This only works on N or later versions of Android.
      * @return allocated size of the buffer
      */
+    @TargetApi(24)
     public int getBufferCapacityInFrames() {
-        if (mGetBufferCapacityMethod != null) {
-            try {
-                Object result = mGetBufferCapacityMethod.invoke(mAudioTrack);
-                int size = ((Integer) result).intValue();
-                return size;
-            } catch (IllegalAccessException e) {
-                e.printStackTrace();
-            } catch (InvocationTargetException e) {
-                e.printStackTrace();
-            }
+        if (mLowLatencySupported) {
+            return mAudioTrack.getBufferCapacityInFrames();
+        } else {
+            return mInitialSize;
         }
-        return mInitialSize;
     }
 
     /**
@@ -142,23 +100,20 @@ public class AudioLatencyTuner {
      * Lower values will reduce latency but may cause glitches.
      * Note that you may not get the size you asked for.
      *
+     * This only works on N or later versions of Android.
+     *
      * @return actual size of the buffer
      */
+    @TargetApi(24)
     public int setBufferSizeInFrames(int thresholdFrames) {
-        if (mSetBufferSizeMethod != null) {
-            try {
-                Object result = mSetBufferSizeMethod.invoke(mAudioTrack, thresholdFrames);
-                int actual = ((Integer) result).intValue();
-                return actual;
-            } catch (IllegalAccessException e) {
-                e.printStackTrace();
-            } catch (InvocationTargetException e) {
-                e.printStackTrace();
-            }
+        if (mLowLatencySupported) {
+            return mAudioTrack.setBufferSizeInFrames(thresholdFrames);
+        } else {
+            return mInitialSize;
         }
-        return mInitialSize;
     }
 
+    @TargetApi(23)
     public int getBufferSizeInFrames() {
         return mAudioTrack.getBufferSizeInFrames();
     }
@@ -167,13 +122,26 @@ public class AudioLatencyTuner {
         return mLowLatencySupported;
     }
 
+    /**
+     * This only works on N or later versions of Android.
+     *
+     * @return flag used to enable LOW_LATENCY
+     */
+    @TargetApi(24)
     public static int getLowLatencyFlag() {
-        return mFlagLowLatency;
+        if (mLowLatencySupported) {
+            return AudioAttributes.FLAG_LOW_LATENCY;
+        } else {
+            return 0;
+        }
     }
 
+    /**
+     * Reset the internal state machine and set the buffer size back to
+     * the original size. The tuning process will then restart.
+     */
     public void reset() {
         mState = STATE_PRIMING;
-        mPreviousUnderrunCount = 0;
         setBufferSizeInFrames(mInitialSize);
     }
 
@@ -182,6 +150,7 @@ public class AudioLatencyTuner {
      * It will lower the latency until there are underruns.
      * Then it raises the latency until the underruns stop.
      */
+    @TargetApi(3)
     public void update() {
         if (!mLowLatencySupported) {
             return;
