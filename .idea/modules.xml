@@ -2,12 +2,12 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$PROJECT_DIR$/MidiBtlePairing/MidiBtlePairing.iml" filepath="$PROJECT_DIR$/MidiBtlePairing/MidiBtlePairing.iml" />
-      <module fileurl="file://$PROJECT_DIR$/MidiKeyboard/MidiKeyboard.iml" filepath="$PROJECT_DIR$/MidiKeyboard/MidiKeyboard.iml" />
-      <module fileurl="file://$PROJECT_DIR$/MidiScope/MidiScope.iml" filepath="$PROJECT_DIR$/MidiScope/MidiScope.iml" />
-      <module fileurl="file://$PROJECT_DIR$/MidiSynthExample/MidiSynthExample.iml" filepath="$PROJECT_DIR$/MidiSynthExample/MidiSynthExample.iml" />
-      <module fileurl="file://$PROJECT_DIR$/MidiTools/MidiTools.iml" filepath="$PROJECT_DIR$/MidiTools/MidiTools.iml" />
-      <module fileurl="file://$PROJECT_DIR$/MidiTools/tests/tests.iml" filepath="$PROJECT_DIR$/MidiTools/tests/tests.iml" />
+      <module fileurl="file://$PROJECT_DIR$/android-midisuite.iml" filepath="$PROJECT_DIR$/android-midisuite.iml" />
+      <module fileurl="file://$PROJECT_DIR$/midibtlepairing/midibtlepairing.iml" filepath="$PROJECT_DIR$/midibtlepairing/midibtlepairing.iml" />
+      <module fileurl="file://$PROJECT_DIR$/midikeyboard/midikeyboard.iml" filepath="$PROJECT_DIR$/midikeyboard/midikeyboard.iml" />
+      <module fileurl="file://$PROJECT_DIR$/midiscope/midiscope.iml" filepath="$PROJECT_DIR$/midiscope/midiscope.iml" />
+      <module fileurl="file://$PROJECT_DIR$/midisynthexample/midisynthexample.iml" filepath="$PROJECT_DIR$/midisynthexample/midisynthexample.iml" />
+      <module fileurl="file://$PROJECT_DIR$/miditools/miditools.iml" filepath="$PROJECT_DIR$/miditools/miditools.iml" />
     </modules>
   </component>
 </project>
