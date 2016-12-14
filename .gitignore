@@ -1,3 +1,13 @@
+gen/
+*/gen/
+*/*.apk
+*/proguard_logs/
+out/
+build/
+captures/
+*.iws
+projectFilesBackup/
+
 *.iml
 .gradle
 /local.properties
