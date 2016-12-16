@@ -56,13 +56,13 @@ public abstract class MidiPortSelector extends DeviceCallback {
         mMidiManager = midiManager;
         mActivity = activity;
         mType = type;
-        mAdapter = new ArrayAdapter<MidiPortWrapper>(activity,
+        mSpinner = (Spinner) activity.findViewById(spinnerId);
+        mAdapter = new ArrayAdapter<>(mSpinner.getContext(),
                 android.R.layout.simple_spinner_item);
         mAdapter.setDropDownViewResource(
                 android.R.layout.simple_spinner_dropdown_item);
         mAdapter.add(new MidiPortWrapper(null, 0, 0));
 
-        mSpinner = (Spinner) activity.findViewById(spinnerId);
         mSpinner.setOnItemSelectedListener(
                 new AdapterView.OnItemSelectedListener() {
 
