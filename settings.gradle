@@ -1,1 +1,1 @@
-include ':miditools', ':midikeyboard', ':midiscope', ':midisynthexample', ':midibtlepairing'
+include ':MidiTools', ':MidiKeyboard', ':MidiScope', ':MidiSynthExample', ':MidiBtlePairing'
