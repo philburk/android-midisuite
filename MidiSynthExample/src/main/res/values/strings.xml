@@ -24,4 +24,7 @@
     </string-array>
 
     <string name="lock_screen_text">Keep Screen On</string>
+    <string name="notification_title">MIDI SynthExample</string>
+    <string name="notification_message">Service is active</string>
+    <string name="ticker_text">MIDI ticker</string>
 </resources>
