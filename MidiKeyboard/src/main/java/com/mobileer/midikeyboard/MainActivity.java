@@ -170,14 +170,16 @@ public class MainActivity extends Activity {
     }
 
     private void midiSend(byte[] buffer, int count, long timestamp) {
-        try {
-            // send event immediately
-            MidiReceiver receiver = mKeyboardReceiverSelector.getReceiver();
-            if (receiver != null) {
-                receiver.send(buffer, 0, count, timestamp);
+        if (mKeyboardReceiverSelector != null) {
+            try {
+                // send event immediately
+                MidiReceiver receiver = mKeyboardReceiverSelector.getReceiver();
+                if (receiver != null) {
+                    receiver.send(buffer, 0, count, timestamp);
+                }
+            } catch (IOException e) {
+                Log.e(TAG, "mKeyboardReceiverSelector.send() failed " + e);
             }
-        } catch (IOException e) {
-            Log.e(TAG, "mKeyboardReceiverSelector.send() failed " + e);
         }
     }
 }
