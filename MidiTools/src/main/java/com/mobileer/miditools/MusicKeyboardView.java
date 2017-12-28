@@ -221,8 +221,8 @@ public class MusicKeyboardView extends View {
         float x = event.getX(pointerIndex);
         float y = event.getY(pointerIndex);
         // Some devices can return negative x or y, which can cause an array exception.
-        if (x < 0.0f) x = 0.0f;
-        if (y < 0.0f) y = 0.0f;
+        x = Math.max(x, 0.0f);
+        y = Math.max(y, 0.0f);
         boolean handled =  false;
         switch (action) {
             case MotionEvent.ACTION_DOWN:
@@ -236,8 +236,8 @@ public class MusicKeyboardView extends View {
                     id = event.getPointerId(i);
                     x = event.getX(i);
                     y = event.getY(i);
-                    if (x < 0.0f) x = 0.0f;
-                    if (y < 0.0f) y = 0.0f;
+                    x = Math.max(x, 0.0f);
+                    y = Math.max(y, 0.0f);
                     onFingerMove(id, x, y);
                 }
                 handled = true;
