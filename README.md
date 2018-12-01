@@ -9,6 +9,8 @@ These are primary examples for developers to learn from.
 
 These may also be useful for OEMs to test MIDI on new devices.
 
+[Android documentation for the test procedure.](https://source.android.com/devices/audio/midi_test#apps)
+
 This is not an official Google product.
 
 ## Apps
