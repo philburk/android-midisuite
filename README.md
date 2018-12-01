@@ -39,3 +39,6 @@ that are used by the other Apps.
 ## Building for App Developers
 
 You can load this project into Android Studio and build it there.
+
+You may want to join the ["android-midi" discussion group](https://groups.google.com/forum/#!forum/android-midi).
+
