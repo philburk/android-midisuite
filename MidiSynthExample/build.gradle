@@ -5,7 +5,6 @@ def versionMinor = 5
 
 android {
     compileSdkVersion 25
-    buildToolsVersion "25.0.1"
 
     defaultConfig {
         applicationId "com.mobileer.midisynthexample"
@@ -25,7 +24,7 @@ android {
 }
 
 dependencies {
-    compile fileTree(include: ['*.jar'], dir: 'libs')
-    compile 'com.android.support:appcompat-v7:25.0.1'
-    compile project(':MidiTools')
+    implementation fileTree(include: ['*.jar'], dir: 'libs')
+    implementation 'com.android.support:appcompat-v7:25.4.0'
+    implementation project(':MidiTools')
 }
