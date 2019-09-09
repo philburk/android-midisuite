@@ -4,12 +4,12 @@ def versionMajor = 1
 def versionMinor = 3
 
 android {
-    compileSdkVersion 25
+    compileSdkVersion 29
 
     defaultConfig {
         applicationId "com.mobileer.midikeyboard"
         minSdkVersion 23
-        targetSdkVersion 26
+        targetSdkVersion 29
         versionCode 4
         versionName "${versionMajor}.${versionMinor}"
 
@@ -25,6 +25,6 @@ android {
 
 dependencies {
     implementation fileTree(include: ['*.jar'], dir: 'libs')
-    implementation 'com.android.support:appcompat-v7:25.4.0'
+    implementation 'androidx.appcompat:appcompat:1.1.0'
     implementation project(':MidiTools')
 }
