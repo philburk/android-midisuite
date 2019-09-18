@@ -45,9 +45,9 @@ public class MusicKeyboardView extends View {
     private static final int[] WHITE_KEY_OFFSETS = {
             0, 2, 4, 5, 7, 9, 11
     };
-    private static final double BLACK_KEY_HEIGHT_FACTOR = 0.60;
-    private static final double BLACK_KEY_WIDTH_FACTOR = 0.6;
-    private static final double BLACK_KEY_OFFSET_FACTOR = 0.18;
+    private static final float BLACK_KEY_HEIGHT_FACTOR = 0.60f;
+    private static final float BLACK_KEY_WIDTH_FACTOR = 0.6f;
+    private static final float BLACK_KEY_OFFSET_FACTOR = 0.18f;
 
     private static final int[] BLACK_KEY_HORIZONTAL_OFFSETS = {
             -1, 1, -1, 0, 1
@@ -60,6 +60,12 @@ public class MusicKeyboardView extends View {
             false, true,
             false
     };
+    private static final int[] WHITE_KEY_LEFT_COMPLEMENTS = {
+            0, 1, 1, 2, 2, 3, 4, 4, 5, 5, 6, 6
+    };
+    private static final int[] BLACK_KEY_LEFT_COMPLEMENTS = {
+            0, 0, 1, 1, 2, 2, 3, 3, 4, 4, 5, 5
+    };
 
     // Preferences
     private int mNumKeys;
@@ -68,12 +74,12 @@ public class MusicKeyboardView extends View {
     private int mNumWhiteKeys = 15;
 
     // Geometry.
-    private int mWidth;
-    private int mHeight;
-    private int mWhiteKeyWidth;
-    private double mBlackKeyWidth;
+    private float mWidth;
+    private float mHeight;
+    private float mWhiteKeyWidth;
+    private float mBlackKeyWidth;
     // Y position of bottom of black keys.
-    private int mBlackBottom;
+    private float mBlackBottom;
     private Rect[] mBlackKeyRectangles;
 
     // Keyboard state
@@ -145,7 +151,7 @@ public class MusicKeyboardView extends View {
 
         mWhiteKeyWidth = mWidth / mNumWhiteKeys;
         mBlackKeyWidth = mWhiteKeyWidth * BLACK_KEY_WIDTH_FACTOR;
-        mBlackBottom = (int) (mHeight * BLACK_KEY_HEIGHT_FACTOR);
+        mBlackBottom = mHeight * BLACK_KEY_HEIGHT_FACTOR;
 
         makeBlackRectangles();
     }
@@ -157,16 +163,17 @@ public class MusicKeyboardView extends View {
         int whiteKeyIndex = 0;
         int blackKeyIndex = 0;
         for (int i = 0; i < mNumKeys; i++) {
-            int x = mWhiteKeyWidth * whiteKeyIndex;
+            float x = mWhiteKeyWidth * whiteKeyIndex;
             int pitch = mLowestPitch + i;
             int note = pitch % NOTES_PER_OCTAVE;
             if (NOTE_IN_OCTAVE_IS_BLACK[note]) {
-                double offset = BLACK_KEY_OFFSET_FACTOR
-                        * BLACK_KEY_HORIZONTAL_OFFSETS[blackKeyIndex % 5];
-                int left = (int) (x - mBlackKeyWidth * (0.6 - offset));
-                left += WHITE_KEY_GAP / 2;
-                int right = (int) (left + mBlackKeyWidth);
-                Rect rect = new Rect(left, top, right, mBlackBottom);
+                int leftCompl = BLACK_KEY_LEFT_COMPLEMENTS[mLowestPitch % 12];
+                float offset = BLACK_KEY_OFFSET_FACTOR
+                        * BLACK_KEY_HORIZONTAL_OFFSETS[(blackKeyIndex + leftCompl) % 5];
+                float left = x - mBlackKeyWidth * (0.55f - offset);
+                left += WHITE_KEY_GAP / 2f;
+                float right = left + mBlackKeyWidth;
+                Rect rect = new Rect(Math.round(left), top, Math.round(right), Math.round(mBlackBottom));
                 rectangles.add(rect);
                 blackKeyIndex++;
             } else {
@@ -186,7 +193,7 @@ public class MusicKeyboardView extends View {
             int pitch = mLowestPitch + i;
             int note = pitch % NOTES_PER_OCTAVE;
             if (!NOTE_IN_OCTAVE_IS_BLACK[note]) {
-                int x = (mWhiteKeyWidth * whiteKeyIndex) + (WHITE_KEY_GAP / 2);
+                float x = (mWhiteKeyWidth * whiteKeyIndex) + (WHITE_KEY_GAP / 2);
                 Paint paint = mNotesOnByPitch[pitch] ? mWhiteOnKeyPaint
                         : mWhiteOffKeyPaint;
                 canvas.drawRect(x, 0, x + mWhiteKeyWidth - WHITE_KEY_GAP, mHeight,
@@ -343,11 +350,12 @@ public class MusicKeyboardView extends View {
 
     // Convert x to MIDI pitch. Ignores black keys.
     private int xToWhitePitch(float x) {
-        int whiteKeyIndex = (int) (x / mWhiteKeyWidth);
-        int octave = whiteKeyIndex / WHITE_KEY_OFFSETS.length;
+        int leftCompl = WHITE_KEY_LEFT_COMPLEMENTS[mLowestPitch % 12];
+        int octave2 = mLowestPitch / 12 - 1;
+        int whiteKeyIndex = (int) (x / mWhiteKeyWidth) + leftCompl;
+        int octave = (whiteKeyIndex) / WHITE_KEY_OFFSETS.length;
         int indexInOctave = whiteKeyIndex - (octave * WHITE_KEY_OFFSETS.length);
-        int pitch = mLowestPitch + (octave * NOTES_PER_OCTAVE) +
-                WHITE_KEY_OFFSETS[indexInOctave];
+        int pitch = 12 * (octave2 + octave + 1) + WHITE_KEY_OFFSETS[indexInOctave];
         return pitch;
     }
 
