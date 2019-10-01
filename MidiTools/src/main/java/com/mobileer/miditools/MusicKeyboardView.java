@@ -60,6 +60,12 @@ public class MusicKeyboardView extends View {
             false, true,
             false
     };
+
+    // These COMPLEMENTS are used to fix a problem with the alignment of the keys.
+    // If mLowestPitch starts from the beginning of some octave then there is no problem.
+    // But if it's not, then the BLACK_KEY_HORIZONTAL_OFFSETS[blackKeyIndex % 5] would give
+    // us the wrong result. So, the "left complement" in this case is the number of black keys we
+    // should add to the blackKeyIndex to fill the left space down to the beginning of the octave.
     private static final int[] WHITE_KEY_LEFT_COMPLEMENTS = {
             0, 1, 1, 2, 2, 3, 4, 4, 5, 5, 6, 6
     };
