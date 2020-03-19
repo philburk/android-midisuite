@@ -59,7 +59,7 @@ public class DeviceScanActivity extends ListActivity {
     // Stops scanning after 10 seconds.
     private static final long SCAN_PERIOD = 10000;
 
-    private static final int PERMISSIONS_REQUEST_ACCESS_COARSE_LOCATION = 9500; // arbitrary
+    private static final int PERMISSIONS_REQUEST_ACCESS_FINE_LOCATION = 9500; // arbitrary
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -182,13 +182,13 @@ public class DeviceScanActivity extends ListActivity {
     }
 
     private void startScanningIfPermitted() {
-        if (checkSelfPermission(Manifest.permission.ACCESS_COARSE_LOCATION)
+        if (checkSelfPermission(Manifest.permission.ACCESS_FINE_LOCATION)
                 != PackageManager.PERMISSION_GRANTED) {
-            if (shouldShowRequestPermissionRationale(Manifest.permission.ACCESS_COARSE_LOCATION)) {
+            if (shouldShowRequestPermissionRationale(Manifest.permission.ACCESS_FINE_LOCATION)) {
                 Toast.makeText(this, R.string.why_btle_location, Toast.LENGTH_LONG).show();
             }
-            requestPermissions(new String[]{Manifest.permission.ACCESS_COARSE_LOCATION},
-                    PERMISSIONS_REQUEST_ACCESS_COARSE_LOCATION);
+            requestPermissions(new String[]{Manifest.permission.ACCESS_FINE_LOCATION},
+                    PERMISSIONS_REQUEST_ACCESS_FINE_LOCATION);
         } else {
             startScanningLeDevices();
         }
@@ -197,7 +197,7 @@ public class DeviceScanActivity extends ListActivity {
     @Override
     public void onRequestPermissionsResult(int requestCode, String[] permissions,
             int[] grantResults) {
-        if (requestCode == PERMISSIONS_REQUEST_ACCESS_COARSE_LOCATION
+        if (requestCode == PERMISSIONS_REQUEST_ACCESS_FINE_LOCATION
                 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
             startScanningLeDevices();
         } else {
