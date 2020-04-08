@@ -13,6 +13,8 @@ These may also be useful for OEMs to test MIDI on new devices.
 
 This is not an official Google product.
 
+[Test Results for various Android MIDI Devices](docs/devices.md)
+
 ## Apps
 
 These apps can also be downloaded from the Google Play App Store.
