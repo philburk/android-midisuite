@@ -20,8 +20,9 @@ package com.mobileer.miditools.synth;
  * Abstract control over the audio latency.
  */
 public abstract class LatencyController {
-    private boolean mLowLatencyEnabled;
-    private boolean mAutoSizeEnabled;
+    // Set these true so we get low latency even when run as a Service.
+    private boolean mLowLatencyEnabled = true;
+    private boolean mAutoSizeEnabled = true;
 
     public void setLowLatencyEnabled(boolean enabled) {
         mLowLatencyEnabled = enabled;
