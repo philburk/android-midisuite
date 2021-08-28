@@ -10,7 +10,7 @@ android {
         applicationId "com.mobileer.midisynthexample"
         minSdkVersion 23
         targetSdkVersion 29
-        versionCode 6
+        versionCode 7
         versionName "${versionMajor}.${versionMinor}"
 
         resValue "string", "versionName", "${defaultConfig.versionName}"
