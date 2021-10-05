@@ -24,6 +24,7 @@ import android.content.pm.PackageManager;
 import android.media.midi.MidiDevice;
 import android.media.midi.MidiDeviceInfo;
 import android.media.midi.MidiDeviceStatus;
+import android.media.midi.MidiInputPort;
 import android.media.midi.MidiManager;
 import android.media.midi.MidiManager.DeviceCallback;
 import android.os.Bundle;
@@ -68,7 +69,7 @@ public class MainActivity extends Activity {
          * @param midiDevice
          */
         public BluetoothMidiDeviceTracker(BluetoothDevice bluetoothDevice,
-                MidiDevice midiDevice) {
+                                          MidiDevice midiDevice) {
             this.bluetoothDevice = bluetoothDevice;
             this.midiDevice = midiDevice;
         }
@@ -276,7 +277,7 @@ public class MainActivity extends Activity {
     }
 
     private void onBluetoothDeviceOpen(final BluetoothDevice bluetoothDevice,
-            final MidiDevice midiDevice) {
+                                       final MidiDevice midiDevice) {
         runOnUiThread(new Runnable() {
             @Override
             public void run() {
@@ -291,6 +292,78 @@ public class MainActivity extends Activity {
                 }
             }
         });
+
+        Thread thread = new Thread(){
+            public void run(){
+                System.out.println("Thread Running");
+                if (midiDevice != null) {
+                    MidiInputPort inputPort = midiDevice.openInputPort(0);
+                    Log.i(TAG, "Test1");
+                    try {
+                        // Start up latency
+                        Thread.sleep(4);
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
+                    int count = 40;
+                    while (true) {
+                        {
+                            byte[] buffer = new byte[32];
+                            int numBytes = 0;
+                            int channel = 3; // MIDI channels 1-16 are encoded as 0-15.
+                            buffer[numBytes++] = (byte) (0x90 + (channel - 1)); // note on
+                            buffer[numBytes++] = (byte) count; // pitch is middle C
+                            buffer[numBytes++] = (byte) 127; // max velocity
+                            int offset = 0;
+                            // post is non-blocking
+                            try {
+                                Log.i(TAG, "Test2");
+                                inputPort.send(buffer, offset, numBytes);
+                                Log.i(TAG, "Test3");
+
+                            } catch (IOException e) {
+                                e.printStackTrace();
+                            }
+                        }
+                        try {
+                            // Time on
+                            Thread.sleep(20);
+                        } catch (InterruptedException e) {
+                            e.printStackTrace();
+                        }
+                        {
+                            byte[] buffer = new byte[32];
+                            int numBytes = 0;
+                            int channel = 3; // MIDI channels 1-16 are encoded as 0-15.
+                            buffer[numBytes++] = (byte) (0x90 + (channel - 1)); // note on
+                            buffer[numBytes++] = (byte) count; // pitch is middle C
+                            buffer[numBytes++] = (byte) 0; // min velocity
+                            int offset = 0;
+                            // post is non-blocking
+                            try {
+                                Log.i(TAG, "Test4");
+                                inputPort.send(buffer, offset, numBytes);
+                                Log.i(TAG, "Test5");
+                            } catch (IOException e) {
+                                e.printStackTrace();
+                            }
+                        }
+                        try {
+                            // Time off
+                            Thread.sleep(1);
+                        } catch (InterruptedException e) {
+                            e.printStackTrace();
+                        }
+                        count++;
+                        if (count > 70) {
+                            count = 30;
+                        }
+                    }
+                }
+            }
+        };
+
+        thread.start();
     }
 
     private void closeBluetoothDevice(BluetoothMidiDeviceTracker tracker) {
@@ -336,7 +409,7 @@ public class MainActivity extends Activity {
 
     @Override
     public void onRequestPermissionsResult(int requestCode,
-            String permissions[], int[] grantResults) {
+                                           String permissions[], int[] grantResults) {
         if (grantResults[0] == PackageManager.PERMISSION_GRANTED) {
             openBluetoothScan();
         }
@@ -344,7 +417,7 @@ public class MainActivity extends Activity {
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode,
-            Intent data) {
+                                    Intent data) {
         if (requestCode == REQUEST_BLUETOOTH_SCAN && resultCode == RESULT_OK) {
             final BluetoothDevice fBluetoothDevice = (BluetoothDevice) data
                     .getParcelableExtra("device");
