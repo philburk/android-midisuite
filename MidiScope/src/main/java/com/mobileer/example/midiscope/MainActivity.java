@@ -65,7 +65,7 @@ public class MainActivity extends Activity implements ScopeLogger {
         // Receiver that prints the messages.
         mLoggingReceiver = new LoggingReceiver(this);
 
-        // Receivers that parses raw data into complete messages.
+        // Receiver that parses raw data into complete messages.
         mConnectFramer = new MidiFramer(mLoggingReceiver);
 
         // Setup a menu to select an input source.

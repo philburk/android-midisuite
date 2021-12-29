@@ -21,6 +21,8 @@ import android.media.midi.MidiDeviceStatus;
 import android.media.midi.MidiReceiver;
 
 import com.mobileer.miditools.MidiFramer;
+import com.mobileer.miditools.SmartMidiReceiver;
+import com.mobileer.miditools.midi20.inquiry.NegotiatingThread;
 
 import java.io.IOException;
 
@@ -32,7 +34,7 @@ public class MidiScope extends MidiDeviceService {
     private static final String TAG = "MidiScope";
 
     private static ScopeLogger mScopeLogger;
-    private MidiReceiver mInputReceiver = new MyReceiver();
+    private MyReceiver mInputReceiver = new MyReceiver();
     private static MidiFramer mDeviceFramer;
 
     @Override
@@ -63,10 +65,11 @@ public class MidiScope extends MidiDeviceService {
         mScopeLogger = logger;
     }
 
-    class MyReceiver extends MidiReceiver {
+    class MyReceiver extends NegotiatingThread {
         @Override
         public void onSend(byte[] data, int offset, int count,
                 long timestamp) throws IOException {
+            super.onSend(data, offset, count, timestamp);
             if (mScopeLogger != null) {
                 // Send raw data to be parsed into discrete messages.
                 mDeviceFramer.send(data, offset, count, timestamp);
@@ -80,14 +83,37 @@ public class MidiScope extends MidiDeviceService {
      */
     @Override
     public void onDeviceStatusChanged(MidiDeviceStatus status) {
+//        mInputReceiver.reset();
         if (mScopeLogger != null) {
             if (status.isInputPortOpen(0)) {
                 mScopeLogger.log("=== connected ===");
                 String text = MidiPrinter.formatDeviceInfo(
                         status.getDeviceInfo());
                 mScopeLogger.log(text);
+
+                if (!NegotiatingThread.isEnabled()) {
+                    mScopeLogger.log("CI Negotiation disabled");
+                } else {
+                    MidiReceiver[] outputPorts = getOutputPortReceivers();
+                    if (outputPorts == null) {
+                        mScopeLogger.log("Connected device has null output ports.");
+                    } else {
+                        if (outputPorts.length <= 0) {
+                            mScopeLogger.log("Connected device has zero output ports.");
+                        } else {
+                            if (status.getOutputPortOpenCount(0) <= 0) {
+                                mScopeLogger.log("Connected device has no open output ports.");
+                            } else {
+                                mInputReceiver.setTargetReceiver(getOutputPortReceivers()[0]);
+                                // Bidirectional device so try to negotiate.
+                                mInputReceiver.start();
+                            }
+                        }
+                    }
+                }
             } else {
                 mScopeLogger.log("--- disconnected ---");
+                mInputReceiver.stop();
             }
         }
     }

@@ -18,7 +18,9 @@ package com.mobileer.midikeyboard;
 
 import android.app.Activity;
 import android.content.pm.PackageManager;
+import android.media.midi.MidiDevice;
 import android.media.midi.MidiManager;
+import android.media.midi.MidiOutputPort;
 import android.media.midi.MidiReceiver;
 import android.os.Bundle;
 import android.util.Log;
@@ -31,6 +33,12 @@ import android.widget.Toast;
 import com.mobileer.miditools.MidiConstants;
 import com.mobileer.miditools.MidiInputPortSelector;
 import com.mobileer.miditools.MusicKeyboardView;
+import com.mobileer.miditools.midi20.inquiry.NegotiatingThread;
+import com.mobileer.miditools.midi20.obsolete.PolyTouchEncoder;
+import com.mobileer.miditools.midi20.protocol.MidiPacketBase;
+import com.mobileer.miditools.midi20.protocol.PacketEncoder;
+import com.mobileer.miditools.midi20.protocol.SysExEncoder;
+import com.mobileer.miditools.midi20.tools.Midi;
 
 import java.io.IOException;
 
@@ -42,12 +50,14 @@ public class MainActivity extends Activity {
     private static final int DEFAULT_VELOCITY = 64;
 
     private MidiInputPortSelector mKeyboardReceiverSelector;
+    private MidiOutputPort mOutputPort;
     private MusicKeyboardView mKeyboard;
     private Button mProgramButton;
     private MidiManager mMidiManager;
     private int mChannel; // ranges from 0 to 15
     private int[] mPrograms = new int[MidiConstants.MAX_CHANNELS]; // ranges from 0 to 127
     private byte[] mByteBuffer = new byte[3];
+    private NegotiatingThread mNegotiator;
 
     public class ChannelSpinnerActivity implements AdapterView.OnItemSelectedListener {
         @Override
@@ -90,7 +100,41 @@ public class MainActivity extends Activity {
 
         // Setup Spinner that selects a MIDI input port.
         mKeyboardReceiverSelector = new MidiInputPortSelector(mMidiManager,
-                this, R.id.spinner_receivers);
+                this, R.id.spinner_receivers) {
+            @Override
+            public void onInputOpened(MidiDevice device, int portIndex) {
+                // Does the device also have an output port with the same index?
+                if (!NegotiatingThread.isEnabled()) {
+                    Log.i(TAG, "CI Negotiation disabled");
+                } else {
+                    if (device.getInfo().getOutputPortCount() <= portIndex) {
+                        Log.i(TAG, "output port counts too low for CI negotiation, "
+                                + device.getInfo().getOutputPortCount() + " <= " + portIndex);
+                    } else {
+                        // Open a paired Output port for receiving the negotiation messages.
+                        mOutputPort = device.openOutputPort(portIndex);
+                        if (mOutputPort == null) {
+                            Log.i(TAG, "Cannot open output port for CI negotiation.");
+                        } else {
+                            // Bidirectional device so try to negotiate.
+                            mNegotiator = new NegotiatingThread();
+                            mOutputPort.connect(mNegotiator);
+                            mNegotiator.setTargetReceiver(getReceiver());
+                            mNegotiator.setInitiator(true);
+                            mNegotiator.start();
+                        }
+                    }
+                }
+            }
+
+            @Override
+            public void onClose() {
+                if (mNegotiator != null) {
+                    mNegotiator.stop();
+                    mNegotiator = null;
+                }
+            }
+        };
 
         mKeyboard = (MusicKeyboardView) findViewById(R.id.musicKeyboardView);
         mKeyboard.addMusicKeyListener(new MusicKeyboardView.MusicKeyListener() {
@@ -124,7 +168,12 @@ public class MainActivity extends Activity {
         } else if (program > 127) {
             program = 127;
         }
-        midiCommand(MidiConstants.STATUS_PROGRAM_CHANGE + mChannel, program);
+
+        if (use10()) {
+            midiCommand(MidiConstants.STATUS_PROGRAM_CHANGE + mChannel, program);
+        } else {
+            programChange2(mChannel, program);
+        }
         mPrograms[mChannel] = program;
         updateProgramText();
     }
@@ -134,11 +183,55 @@ public class MainActivity extends Activity {
     }
 
     private void noteOff(int channel, int pitch, int velocity) {
-        midiCommand(MidiConstants.STATUS_NOTE_OFF + channel, pitch, velocity);
+        if (use10()) {
+            midiCommand(MidiConstants.STATUS_NOTE_OFF +channel, pitch, velocity);
+        } else {
+            noteOff2(channel, pitch, velocity);
+        }
+    }
+
+    private boolean use10() {
+        return (mNegotiator != null) && (mNegotiator.getNegotiatedVersion() == Midi.VERSION_1_0);
     }
 
     private void noteOn(int channel, int pitch, int velocity) {
-        midiCommand(MidiConstants.STATUS_NOTE_ON + channel, pitch, velocity);
+        if (use10()) {
+            midiCommand(MidiConstants.STATUS_NOTE_ON +channel, pitch, velocity);
+        } else {
+            noteOn2(channel, pitch, velocity);
+        }
+    }
+
+    private void programChange2(int channel, int program) {
+        MidiPacketBase packet = MidiPacketBase.create();
+        packet.programChange(1234, program);
+        packet.setChannel(channel);
+        sendPacket(packet);
+    }
+
+    private void noteOn2(int channel, int pitch, int velocity) {
+        MidiPacketBase packet = MidiPacketBase.create();
+        packet.noteOn(pitch, velocity);
+        packet.setChannel(channel);
+        sendPacket(packet);
+    }
+
+    private void noteOff2(int channel, int pitch, int velocity) {
+        MidiPacketBase packet = MidiPacketBase.create();
+        packet.noteOff(pitch, velocity);
+        packet.setChannel(channel);
+        sendPacket(packet);
+    }
+
+    private void sendPacket(MidiPacketBase packet) {
+        PacketEncoder encoder = new SysExEncoder();
+        //PacketEncoder encoder = new PolyTouchEncoder();
+        int len = encoder.encode(packet);
+        long now = System.nanoTime();
+        byte[] data = encoder.getBytes();
+        Log.i(TAG, "packet = " + packet);
+        Log.i(TAG, "noteOn2() len = " + len + ", b[0] = " + (((int)data[0]) & 0xFF));
+        midiSend(data, len, now);
     }
 
     private void midiCommand(int status, int data1, int data2) {

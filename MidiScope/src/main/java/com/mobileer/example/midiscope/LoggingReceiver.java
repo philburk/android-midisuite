@@ -19,6 +19,12 @@ package com.mobileer.example.midiscope;
 import android.media.midi.MidiReceiver;
 import android.util.Log;
 
+import com.mobileer.miditools.midi20.obsolete.PolyTouchDecoder;
+import com.mobileer.miditools.midi20.protocol.MidiPacketBase;
+import com.mobileer.miditools.midi20.protocol.PacketDecoder;
+import com.mobileer.miditools.midi20.protocol.SysExDecoder;
+import com.mobileer.miditools.midi20.tools.Midi;
+
 import java.io.IOException;
 
 /**
@@ -32,6 +38,9 @@ public class LoggingReceiver extends MidiReceiver {
     private long mStartTime;
     private ScopeLogger mLogger;
     private long mLastTimeStamp = 0;
+    MidiPacketBase packet = MidiPacketBase.create();
+    PolyTouchDecoder polyTouchDecoder = new PolyTouchDecoder();
+    SysExDecoder sysExDecoder = new SysExDecoder();
 
     public LoggingReceiver(ScopeLogger logger) {
         mStartTime = System.nanoTime();
@@ -60,6 +69,22 @@ public class LoggingReceiver extends MidiReceiver {
         sb.append(MidiPrinter.formatBytes(data, offset, count));
         sb.append(": ");
         sb.append(MidiPrinter.formatMessage(data, offset, count));
+
+        Log.i(TAG, "onSend() offset = " + offset + ", count = " + count);
+        if ((data[offset] & 0x0FF) == Midi.SYSEX_START) {
+            boolean done = sysExDecoder.decode(data, offset, count, packet);
+            if (done) {
+                Log.i(TAG, "packet = " + packet);
+                sb.append(MidiPacketPrinter.formatPacket(packet));
+            }
+        } else if ((data[offset] & 0x0F0) == 0x0A0) {
+            boolean done = polyTouchDecoder.decode(data, offset, count, packet);
+            if (done) {
+                Log.i(TAG, "packet = " + packet);
+                sb.append(MidiPacketPrinter.formatPacket(packet));
+            }
+        }
+
         String text = sb.toString();
         mLogger.log(text);
         Log.i(TAG, text);
