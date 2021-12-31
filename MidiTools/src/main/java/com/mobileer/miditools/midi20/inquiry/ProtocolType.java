@@ -21,7 +21,7 @@ import com.mobileer.miditools.midi20.tools.MidiWriter;
 
 public abstract class ProtocolType {
     public final static int TYPE_MIDI_1_0 = 0;
-    public final static int TYPE_MIDI_NEW = 1;
+    public final static int TYPE_MIDI_2 = 1;
     public final static int TYPE_MANUFACTURER_SPECIFIC = 2;
 
     public abstract int getType();
@@ -31,8 +31,8 @@ public abstract class ProtocolType {
     public static ProtocolType create(int type) {
         if (type == TYPE_MIDI_1_0) {
             return new ProtocolTypeMidi10();
-        } else if (type == TYPE_MIDI_NEW) {
-            return new ProtocolTypeMidiNew();
+        } else if (type == TYPE_MIDI_2) {
+            return new ProtocolTypeMidi20();
         }
         return null;
     }

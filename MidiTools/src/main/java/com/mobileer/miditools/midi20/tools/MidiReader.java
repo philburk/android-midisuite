@@ -64,11 +64,15 @@ public class MidiReader {
     }
 
     public int read2() {
-        return (read() << 8) | read();
+        return read() | (read() << 8);
     }
 
     public int read3() {
-        return (read() << 16) | read2();
+        return read2() | (read() << 16);
+    }
+
+    public int read4() {
+        return read3() | (read() << 24);
     }
 
     public int getCursor() {

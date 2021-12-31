@@ -2,6 +2,7 @@ package com.mobileer.miditools.midi20;
 
 import com.mobileer.miditools.midi20.inquiry.CapabilityNegotiator;
 import com.mobileer.miditools.midi20.inquiry.InquiryMessage;
+import com.mobileer.miditools.midi20.inquiry.ProtocolTypeMidi20;
 import com.mobileer.miditools.midi20.inquiry.ProtocolTypeMidiNew;
 import com.mobileer.miditools.midi20.protocol.MidiPacketBase;
 import com.mobileer.miditools.midi20.protocol.PacketDecoder;
@@ -11,6 +12,7 @@ import com.mobileer.miditools.midi20.protocol.RawByteEncoder;
 import com.mobileer.miditools.midi20.protocol.SysExDecoder;
 import com.mobileer.miditools.midi20.protocol.SysExEncoder;
 import com.mobileer.miditools.midi20.tools.Midi;
+import com.mobileer.miditools.midi20.tools.MidiReader;
 import com.mobileer.miditools.midi20.tools.MidiWriter;
 import com.mobileer.miditools.midi20.tools.SysExParser;
 
@@ -218,38 +220,65 @@ public class ExampleUnitTest {
     }
 
     @Test
-    public void testMidiBuffer() {
+    public void testMidiWriter() {
         MidiWriter buffer = new MidiWriter();
         buffer.write(0x1234A6);
         int i = 0;
         assertEquals(0xA6, buffer.getData()[i++] & 0xFF);
         buffer.write2(0x1352C7);
-        assertEquals(0x52,buffer.getData()[i++] & 0xFF);
         assertEquals(0xC7,buffer.getData()[i++] & 0xFF);
+        assertEquals(0x52,buffer.getData()[i++] & 0xFF);
         assertEquals(i, buffer.getCursor());
 
-        buffer.writeManufacturerId(0x09);
-        assertEquals(0x09,buffer.getData()[i++] & 0xFF);
+        buffer.write3(0x12345678);
+        assertEquals(0x78,buffer.getData()[i++] & 0xFF);
+        assertEquals(0x56,buffer.getData()[i++] & 0xFF);
+        assertEquals(0x34,buffer.getData()[i++] & 0xFF);
+
+        buffer.write4(0x15161718);
+        assertEquals(0x18,buffer.getData()[i++] & 0xFF);
+        assertEquals(0x17,buffer.getData()[i++] & 0xFF);
+        assertEquals(0x16,buffer.getData()[i++] & 0xFF);
+        assertEquals(0x15,buffer.getData()[i++] & 0xFF);
         assertEquals(i, buffer.getCursor());
+    }
+
+    @Test
+    public void testMidiReader() {
+        byte[] data = { 0x00, 0x55, 0x33, 0x44,
+                0x77, 0x66, 0x19,
+                0x01, 0x02, 0x03, 0x04 };
+        MidiReader reader = new MidiReader(data, 1);
+
+        assertEquals(0x00000055, reader.read());
+        assertEquals(0x00004433, reader.read2());
+        assertEquals(0x00196677, reader.read3());
+        assertEquals(0x04030201, reader.read4());
     }
 
     @Test
     public void testInquiryMessage() {
         InquiryMessage message1 = new InquiryMessage(InquiryMessage.CI_SUBID2_INITIATE_PROTOCOL_NEGOTIATION);
         assertFalse(message1.supportsMidi20());
-        message1.addProtocol(new ProtocolTypeMidiNew());
+        message1.addProtocol(new ProtocolTypeMidi20());
         assertTrue(message1.supportsMidi20());
-        message1.setNegotiationIdentifier((102 << 21) + (23 << 14) + (97 << 7) + 45);
+        message1.setMuid((102 << 21) + (23 << 14) + (97 << 7) + 45);
 
         MidiWriter buffer = new MidiWriter();
         int len = message1.encode(buffer);
         assertTrue(len > 0);
 
-        byte[] expected = { (byte)0xF0, 0x7E, 0x7F, 0x0D, 0x10, 0x00,
-                102, 23, 97, 45};
+        byte[] expected = { (byte)0xF0, 0x7E, 0x7F, 0x0D,
+                0x10, // CI_SUBID2_INITIATE_PROTOCOL_NEGOTIATION
+                0x01, // CI_VERSION
+                45, 97, 23, 102, // source MUID
+                127, 127, 127, 127 // destination MUID
+        };  // MUID
         byte[] actual = buffer.getData();
         int i = 0;
         for (byte b : expected) {
+            System.out.printf("i = %d, expected = 0x%02X, actual = 0x%02X\n",
+                    i, b, actual[i]);
             assertEquals(b, actual[i++]);
         }
     }
@@ -258,7 +287,7 @@ public class ExampleUnitTest {
     public void testParsing() throws IOException {
         InquiryMessage message1 = new InquiryMessage(
                 InquiryMessage.CI_SUBID2_INITIATE_PROTOCOL_NEGOTIATION);
-        message1.addProtocol(new ProtocolTypeMidiNew());
+        message1.addProtocol(new ProtocolTypeMidi20());
         assertTrue(message1.supportsMidi20());
 
         MidiWriter buffer = new MidiWriter();

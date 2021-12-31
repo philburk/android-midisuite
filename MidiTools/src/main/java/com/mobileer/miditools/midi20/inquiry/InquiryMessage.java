@@ -23,12 +23,16 @@ import com.mobileer.miditools.midi20.tools.MidiWriter;
 import java.io.IOException;
 import java.util.ArrayList;
 
-
+/**
+ * Represent a Capabilities Inquiry message.
+ * Includes encoder and decoder.
+ */
 public class InquiryMessage extends Midi {
 
-    private int mOpcode;
-    private int mNegotiationIdentifier; // MNID Negotiation Identifier
-    private int mAuthorityLevel;
+    private int mOpcode;  // AKA SubId #2
+    private static int mMuid = generateMuid(); // MUID Negotiation Identifier
+    private int mDestinationMuid = CI_MUID_BROADCAST;
+    private int mAuthorityLevel = CI_AUTHORITY_ENDPOINT_AVERAGE;
     private int mDeviceId = CI_TOFROM_PORT;
     private int mVersion = CI_VERSION;
     private int mManufacturer = 0x00020D; // 3 bytes, Google MMA ID, FIXME - set from app
@@ -46,13 +50,18 @@ public class InquiryMessage extends Midi {
     public InquiryMessage() {
     }
 
-    public static int generateNegotiationIdentifier() {
-        return (int) (Math.random() * (1 << 28)); // 28-bit MNID
+    public static int generateMuid() {
+        int muid = 0;
+        // Keep trying until we get a valid MUID.
+        while (muid == 0 || muid >= CI_MUID_RESERVED_START) {
+            muid = (int) (Math.random() * (1 << 28)); // 28-bit MUID
+        }
+        return muid;
     }
 
     public void addProtocol(ProtocolType protocolType) {
         mProtocols.add(protocolType);
-        mSupportsMidi20 |= protocolType.getType() == ProtocolType.TYPE_MIDI_NEW; // TODO Check Version
+        mSupportsMidi20 |= protocolType.getType() == ProtocolType.TYPE_MIDI_2; // TODO Check Version
     }
 
     public boolean supportsMidi20() {
@@ -72,16 +81,17 @@ public class InquiryMessage extends Midi {
         buffer.write(SYSEX_SUBID1_CI);
         buffer.write(mOpcode);
         buffer.write(mVersion);
-        buffer.write28bits(mNegotiationIdentifier);
-        buffer.write(mAuthorityLevel);
+        buffer.write28bits(mMuid);
+        buffer.write28bits(mDestinationMuid);
+        buffer.write(mAuthorityLevel); // TODO Should this be dependent on mOpcode?
         switch(mOpcode) {
             case CI_SUBID2_INITIATE_PROTOCOL_NEGOTIATION:
             case CI_SUBID2_REPLY_PROTOCOL_NEGOTIATION:
             case CI_SUBID2_SET_PROTOCOL:
-                buffer.writeManufacturerId(mManufacturer);
+                buffer.write3(mManufacturer);
                 buffer.write2(mFamily);
                 buffer.write2(mModel);
-                buffer.write3(mRevision);
+                buffer.write4(mRevision);
                 buffer.write(mProtocols.size());
                 for (ProtocolType protocolType : mProtocols) {
                     protocolType.encode(buffer);
@@ -109,12 +119,14 @@ public class InquiryMessage extends Midi {
         return reader.getCursor();
     }
 
+    // Start with Device ID.
     protected int decodePayload(MidiReader reader) throws IOException {
         mDeviceId = reader.read(); // CI_TOFROM_PORT;
         if (reader.read() != SYSEX_SUBID1_CI) throw new IOException("SysEx not CI");
         mOpcode = reader.read();
         mVersion = reader.read();
-        mNegotiationIdentifier = reader.read28bits();
+        mMuid = reader.read28bits();
+        mDestinationMuid = reader.read28bits();
         mAuthorityLevel = reader.read();
 
         // This part of the payload depends on the opcode (subId2)
@@ -122,10 +134,10 @@ public class InquiryMessage extends Midi {
             case CI_SUBID2_INITIATE_PROTOCOL_NEGOTIATION:
             case CI_SUBID2_REPLY_PROTOCOL_NEGOTIATION:
             case CI_SUBID2_SET_PROTOCOL:
-                mManufacturer = reader.readManufacturerId();
+                mManufacturer = reader.read3();
                 mFamily = reader.read2(); // TODO Little Endian
                 mModel = reader.read2();  // TODO Little Endian
-                mRevision = reader.read3();
+                mRevision = reader.read4();
                 int numProtocols = reader.read();
                 for (int i = 0; i < numProtocols; i++) {
                     int type = reader.peek();
@@ -161,12 +173,12 @@ public class InquiryMessage extends Midi {
         mOpcode = opcode;
     }
 
-    public int getNegotiationIdentifier() {
-        return mNegotiationIdentifier;
+    public int getMuid() {
+        return mMuid;
     }
 
-    public void setNegotiationIdentifier(int identifier) {
-        mNegotiationIdentifier = identifier;
+    public void setMuid(int identifier) {
+        mMuid = identifier;
     }
 
     public String opcodeToString(int opcode) {

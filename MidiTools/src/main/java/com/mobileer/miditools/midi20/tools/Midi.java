@@ -22,8 +22,10 @@ public class Midi {
     public static final int SYSEX_UNIVERSAL = 0x7E;
     public static final int SYSEX_SUBID1_CI = 0x0D;
 
+    // These values are defined in the MIDI CI Specification
     public static final int CI_TOFROM_PORT = 0x7F;
-    public static final int CI_VERSION = 0x00;
+    public static final int CI_VERSION_1_1 = 0x01; // For CI version 1.1
+    public static final int CI_VERSION = CI_VERSION_1_1;
 
     public static final int CI_SUBID2_INITIATE_PROTOCOL_NEGOTIATION = 0x10;
     public static final int CI_SUBID2_REPLY_PROTOCOL_NEGOTIATION = 0x11;
@@ -31,6 +33,10 @@ public class Midi {
     public static final int CI_SUBID2_TEST_INITIATOR_TO_RESPONDER = 0x13;
     public static final int CI_SUBID2_TEST_RESPONDER_TO_INITIATOR = 0x14;
     public static final int CI_SUBID2_CONFIRM_NEW_PROTOCOL = 0x15;
+    public static final int CI_AUTHORITY_ENDPOINT_AVERAGE = 0x38;
+
+    public static final int CI_MUID_RESERVED_START = 0x0FFFFF00;
+    public static final int CI_MUID_BROADCAST = 0x0FFFFFFF;
 
     public static final int VERSION_1_0 = 10;
     public static final int VERSION_2_0 = 20;

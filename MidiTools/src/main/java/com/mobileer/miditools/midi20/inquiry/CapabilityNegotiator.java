@@ -22,6 +22,7 @@ import com.mobileer.miditools.midi20.tools.Midi;
 
 public class CapabilityNegotiator {
     static final String TAG = "CapabilityNegotiator";
+    private static final boolean logsEnabled = true;
 
     private static final int STATE_IDLE = 0;
     private static final int STATE_INITIATOR_WAITING_REPLY = 1;
@@ -44,7 +45,7 @@ public class CapabilityNegotiator {
     private int mState = STATE_IDLE;
     private long mTime;
     private long mTimeStart;
-    private boolean mInitiator = false;
+    private boolean mInitiator = true;
 
     public void setSupportedVersion(int version) {
         mSupportedVersion = version;
@@ -107,12 +108,21 @@ public class CapabilityNegotiator {
         return name;
     }
 
+    private void maybeLog(String message) {
+        if (logsEnabled) {
+            Log.d(TAG,message);
+        } else {
+            System.out.println(message);
+        }
+    }
+
     public InquiryMessage advanceStateMachine(InquiryMessage inMessage) {
         InquiryMessage outMessage = null;
 
         int opcode = (inMessage == null) ? OPCODE_NONE : inMessage.getOpcode();
 
-        //Log.d(TAG,"advanceStateMachine: state = " + stateToString(mState) + ", opcode = " + opcode);
+        maybeLog("MIDI advanceStateMachine() state = "
+                    + stateToString(mState) + ", opcode = " + opcode);
         int beginningState = mState;
         switch(mState) {
             case STATE_IDLE:
@@ -120,17 +130,17 @@ public class CapabilityNegotiator {
                     case OPCODE_NONE:
                         if (mSupportedVersion == Midi.VERSION_2_0 && mInitiator) {
                             outMessage = new InquiryMessage(InquiryMessage.CI_SUBID2_INITIATE_PROTOCOL_NEGOTIATION);
-                            mNegotiationIdentifier = InquiryMessage.generateNegotiationIdentifier();
-                            outMessage.addProtocol(new ProtocolTypeMidiNew());
+                            mNegotiationIdentifier = InquiryMessage.generateMuid();
+                            outMessage.addProtocol(new ProtocolTypeMidi20());
                             outMessage.addProtocol(new ProtocolTypeMidi10());
                             mState = STATE_INITIATOR_WAITING_REPLY;
                         }
                         break;
                     case InquiryMessage.CI_SUBID2_INITIATE_PROTOCOL_NEGOTIATION:
-                        mNegotiationIdentifier = inMessage.getNegotiationIdentifier();
+                        mNegotiationIdentifier = inMessage.getMuid();
                         outMessage = new InquiryMessage(InquiryMessage.CI_SUBID2_REPLY_PROTOCOL_NEGOTIATION);
                         if (mSupportedVersion == Midi.VERSION_2_0) {
-                            outMessage.addProtocol(new ProtocolTypeMidiNew());
+                            outMessage.addProtocol(new ProtocolTypeMidi20());
                             outMessage.addProtocol(new ProtocolTypeMidi10());
                             mState = STATE_RESPONDER_REPLIED;
                         } else {
@@ -149,15 +159,15 @@ public class CapabilityNegotiator {
                     case OPCODE_NONE:
                         break;
                     case InquiryMessage.CI_SUBID2_INITIATE_PROTOCOL_NEGOTIATION:
-                        if (mNegotiationIdentifier == inMessage.getNegotiationIdentifier()) {
+                        if (mNegotiationIdentifier == inMessage.getMuid()) {
                             // TODO Collision
                         }
                         break;
                     case InquiryMessage.CI_SUBID2_REPLY_PROTOCOL_NEGOTIATION:
-                        if (mNegotiationIdentifier == inMessage.getNegotiationIdentifier()) {
+                        if (mNegotiationIdentifier == inMessage.getMuid()) {
                             if (inMessage.supportsMidi20()) {
                                 outMessage = new InquiryMessage(InquiryMessage.CI_SUBID2_SET_PROTOCOL);
-                                outMessage.addProtocol(new ProtocolTypeMidiNew());
+                                outMessage.addProtocol(new ProtocolTypeMidi20());
                                 mTimeStart = mTime;
                                 mPreviousVersion = mNegotiatedVersion;
                                 mNegotiatedVersion = Midi.VERSION_2_0;
@@ -186,7 +196,7 @@ public class CapabilityNegotiator {
                     case OPCODE_NONE:
                         break;
                     case InquiryMessage.CI_SUBID2_SET_PROTOCOL:
-                        if (mNegotiationIdentifier == inMessage.getNegotiationIdentifier()) {
+                        if (mNegotiationIdentifier == inMessage.getMuid()) {
                             mNegotiatedVersion = inMessage.supportsMidi20()
                                                  ? Midi.VERSION_2_0
                                                  : Midi.VERSION_1_0;
@@ -213,7 +223,7 @@ public class CapabilityNegotiator {
                         }
                         break;
                     case InquiryMessage.CI_SUBID2_TEST_INITIATOR_TO_RESPONDER:
-                        if (mNegotiationIdentifier == inMessage.getNegotiationIdentifier()) {
+                        if (mNegotiationIdentifier == inMessage.getMuid()) {
                             outMessage = new InquiryMessage(InquiryMessage.CI_SUBID2_TEST_RESPONDER_TO_INITIATOR);
                             mState = STATE_RESPONDER_WAITING_CONFIRMATION;
                             mTimeStart = mTime;
@@ -232,7 +242,7 @@ public class CapabilityNegotiator {
                     case OPCODE_NONE:
                         break;
                     case InquiryMessage.CI_SUBID2_TEST_RESPONDER_TO_INITIATOR:
-                        if (mNegotiationIdentifier == inMessage.getNegotiationIdentifier()) {
+                        if (mNegotiationIdentifier == inMessage.getMuid()) {
                             outMessage = new InquiryMessage(InquiryMessage.CI_SUBID2_CONFIRM_NEW_PROTOCOL);
                             mState = STATE_FINISHED;
                         } else {
@@ -251,7 +261,7 @@ public class CapabilityNegotiator {
                     case OPCODE_NONE:
                         break;
                     case InquiryMessage.CI_SUBID2_CONFIRM_NEW_PROTOCOL:
-                        if (mNegotiationIdentifier == inMessage.getNegotiationIdentifier()) {
+                        if (mNegotiationIdentifier == inMessage.getMuid()) {
                             mState = STATE_FINISHED;
                         } else {
                             unexpectedMessage(inMessage);
@@ -273,7 +283,7 @@ public class CapabilityNegotiator {
         }
 
         if (outMessage != null) {
-            outMessage.setNegotiationIdentifier(mNegotiationIdentifier);
+            outMessage.setMuid(mNegotiationIdentifier);
         }
 
         if (mState != beginningState) {

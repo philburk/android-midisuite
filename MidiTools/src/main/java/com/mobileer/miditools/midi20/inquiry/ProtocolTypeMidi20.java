@@ -24,7 +24,7 @@ public class ProtocolTypeMidi20 extends ProtocolType {
     private int mSubType;
 
     public int getType() {
-        return TYPE_MIDI_NEW;
+        return TYPE_MIDI_2;
     }
 
     public int getVersion() {
@@ -54,7 +54,7 @@ public class ProtocolTypeMidi20 extends ProtocolType {
     @Override
     public void decode(MidiReader reader) {
         int type = reader.read();
-        assert (type == TYPE_MIDI_NEW);
+        assert (type == TYPE_MIDI_2);
         mVersion = reader.read();
         mSubType = reader.read();
         reader.read2(); // reserved TODO verify zero?

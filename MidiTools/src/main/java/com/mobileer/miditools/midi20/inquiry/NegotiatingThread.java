@@ -21,6 +21,7 @@ public class NegotiatingThread extends MidiReceiver implements Runnable {
     private Thread mThread;
     private volatile boolean mRunning = false;
     private static final boolean mEnabled = true;
+    private boolean mInitiator = false;
 
     public static boolean isEnabled() {
         return mEnabled;
@@ -68,6 +69,7 @@ public class NegotiatingThread extends MidiReceiver implements Runnable {
     public synchronized void start() {
         if (mRunning) return;
         mNegotiator = new CapabilityNegotiator();
+        mNegotiator.setInitiator(mInitiator);
         mNegotiator.setSupportedVersion(Midi.VERSION_2_0);
         mRunning = true;
         mThread = new Thread(this);
@@ -91,7 +93,7 @@ public class NegotiatingThread extends MidiReceiver implements Runnable {
     }
 
     public void setInitiator(boolean b) {
-        mNegotiator.setInitiator(b);
+        mInitiator = b;
     }
 
     public synchronized void stop() {

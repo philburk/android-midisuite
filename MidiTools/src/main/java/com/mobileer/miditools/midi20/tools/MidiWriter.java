@@ -43,33 +43,38 @@ public class MidiWriter {
         return cursor;
     }
 
+    /**
+     * Write a single byte to the buffer.
+     * @param value
+     */
     public void write(int value) {
         mData[cursor++] = (byte) value;
     }
 
+    /**
+     * Write bottom two bytes, LSB first.
+     * @param value
+     */
     public void write2(int value) {
+        write(value); // LSB first
         write(value>>8);
-        write(value);
     }
 
     public void write3(int value) {
-        write(value>>16);
         write2(value);
+        write(value>>16);
+    }
+    public void write4(int value) {
+        write3(value);
+        write(value>>24);
     }
 
     public void write28bits(int value) {
-        // Big Endian, 7-bit data
-        write((value >> 21) & 0x7F);
-        write((value >> 14) & 0x7F);
-        write((value >> 7) & 0x7F);
+        // Little Endian, 7-bits at a time
         write(value & 0x7F);
+        write((value >> 7) & 0x7F);
+        write((value >> 14) & 0x7F);
+        write((value >> 21) & 0x7F);
     }
 
-    public void writeManufacturerId(int id) {
-        if (id < 0x7F) {
-            write(id);
-        } else {
-            write3(id);
-        }
-    }
 }
