@@ -19,12 +19,14 @@ package com.mobileer.miditools.midi20.protocol;
 public interface PacketEncoder {
 
     /**
-     * Write byte to the stream.
-     * @return
+     * Write another packet in an encoded format to internal storage.
+     * @param packet
+     * @return number of bytes used to encode the packet
      */
-//    public abstract void write(int b);
-
     int encode(MidiPacketBase packet);
 
+    /**
+     * @return all of the bytes encoded so far
+     */
     byte[] getBytes();
 }

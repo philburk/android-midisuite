@@ -9,13 +9,15 @@ import com.mobileer.miditools.midi20.tools.MidiWriter;
 
 import java.io.IOException;
 
-
+/**
+ * A thread that negotiates the transfer of MIDI 2.0 Universal MIDI Packets.
+ */
 public class NegotiatingThread extends MidiReceiver implements Runnable {
     static final String TAG = "NegotiatingThread";
     private static final long PERIOD_MSEC = 100;
 
-    CapabilityNegotiator mNegotiator = new CapabilityNegotiator();
-    MidiReceiver mTargetReceiver;
+    private CapabilityNegotiator mNegotiator;
+    private MidiReceiver mTargetReceiver;
     private Thread mThread;
     private volatile boolean mRunning = false;
     private static final boolean mEnabled = true;
@@ -63,10 +65,12 @@ public class NegotiatingThread extends MidiReceiver implements Runnable {
         }
     }
 
-    public void start() {
+    public synchronized void start() {
+        if (mRunning) return;
+        mNegotiator = new CapabilityNegotiator();
         mNegotiator.setSupportedVersion(Midi.VERSION_2_0);
-        mThread = new Thread(this);
         mRunning = true;
+        mThread = new Thread(this);
         mThread.start();
     }
 
@@ -90,17 +94,21 @@ public class NegotiatingThread extends MidiReceiver implements Runnable {
         mNegotiator.setInitiator(b);
     }
 
-    public void stop() {
+    public synchronized void stop() {
+        if (!mRunning) return;
         mRunning = false;
         mThread.interrupt();
         try {
             mThread.join(10 * PERIOD_MSEC);
+            mThread = null;
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
     }
 
     public int getNegotiatedVersion() {
-        return (mEnabled) ? mNegotiator.getNegotiatedVersion() : Midi.VERSION_2_0;
+        return (mEnabled)
+                ? ((mNegotiator != null) ? mNegotiator.getNegotiatedVersion() : Midi.VERSION_1_0)
+                : Midi.VERSION_2_0;
     }
 }

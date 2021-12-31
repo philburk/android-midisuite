@@ -23,6 +23,7 @@ import android.media.midi.MidiReceiver;
 import com.mobileer.miditools.MidiFramer;
 import com.mobileer.miditools.SmartMidiReceiver;
 import com.mobileer.miditools.midi20.inquiry.NegotiatingThread;
+import com.mobileer.miditools.midi20.tools.Midi;
 
 import java.io.IOException;
 
@@ -36,6 +37,7 @@ public class MidiScope extends MidiDeviceService {
     private static ScopeLogger mScopeLogger;
     private MyReceiver mInputReceiver = new MyReceiver();
     private static MidiFramer mDeviceFramer;
+    private static LoggingReceiver mLoggingReceiver;
 
     @Override
     public void onCreate() {
@@ -59,8 +61,8 @@ public class MidiScope extends MidiDeviceService {
     public static void setScopeLogger(ScopeLogger logger) {
         if (logger != null) {
             // Receiver that prints the messages.
-            LoggingReceiver loggingReceiver = new LoggingReceiver(logger);
-            mDeviceFramer = new MidiFramer(loggingReceiver);
+            mLoggingReceiver = new LoggingReceiver(logger);
+            mDeviceFramer = new MidiFramer(mLoggingReceiver);
         }
         mScopeLogger = logger;
     }
@@ -72,7 +74,13 @@ public class MidiScope extends MidiDeviceService {
             super.onSend(data, offset, count, timestamp);
             if (mScopeLogger != null) {
                 // Send raw data to be parsed into discrete messages.
-                mDeviceFramer.send(data, offset, count, timestamp);
+                if (getNegotiatedVersion() == Midi.VERSION_1_0) {
+                    mLoggingReceiver.setUsingPackets(false);
+                    mDeviceFramer.send(data, offset, count, timestamp);
+                } else {
+                    mLoggingReceiver.setUsingPackets(true);
+                    mLoggingReceiver.onSend(data, offset, count, timestamp);
+                }
             }
         }
     }

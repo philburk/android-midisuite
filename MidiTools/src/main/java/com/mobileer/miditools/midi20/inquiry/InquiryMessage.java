@@ -31,7 +31,7 @@ public class InquiryMessage extends Midi {
     private int mAuthorityLevel;
     private int mDeviceId = CI_TOFROM_PORT;
     private int mVersion = CI_VERSION;
-    private int mManufacturer = 0x00020D; // 3 bytes, Google MMA ID
+    private int mManufacturer = 0x00020D; // 3 bytes, Google MMA ID, FIXME - set from app
     private int mFamily; // two 7-bit bytes, eg. 0x0173
     private int mModel; // 14 bits
     private int mRevision; // 28 bits

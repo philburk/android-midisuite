@@ -18,9 +18,11 @@ package com.mobileer.miditools.midi20.protocol;
 
 public interface PacketDecoder {
 
+    void wrap(byte[] data, int offset, int length);
+
     /**
      * @param packet
      * @return true if the packet was fully decoded
      */
-    boolean decode(byte[] stream, int offset, int len, MidiPacketBase packet);
+    boolean decode(MidiPacketBase packet);
 }

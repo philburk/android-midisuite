@@ -112,7 +112,7 @@ public class CapabilityNegotiator {
 
         int opcode = (inMessage == null) ? OPCODE_NONE : inMessage.getOpcode();
 
-        Log.i(TAG,"advanceStateMachine: state = " + stateToString(mState) + ", opcode = " + opcode);
+        //Log.d(TAG,"advanceStateMachine: state = " + stateToString(mState) + ", opcode = " + opcode);
         int beginningState = mState;
         switch(mState) {
             case STATE_IDLE:
@@ -277,7 +277,7 @@ public class CapabilityNegotiator {
         }
 
         if (mState != beginningState) {
-            Log.i(TAG,"advanceStateMachine() - state transition from "
+            System.out.println("advanceStateMachine() - state transition from "
                     + stateToString(beginningState)
                     + " to " + stateToString(mState)
                     + ", opcode = " + opcode);
@@ -286,7 +286,7 @@ public class CapabilityNegotiator {
     }
 
     private void unexpectedMessage(InquiryMessage message) {
-        Log.i(TAG,"unexpectedMessage() - mState = " + mState + ", msg = " + message);
+        System.out.println("unexpectedMessage() - mState = " + mState + ", msg = " + message);
         mState = STATE_IDLE;
     }
 }

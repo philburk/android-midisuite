@@ -3,12 +3,11 @@ package com.mobileer.miditools.midi20;
 import com.mobileer.miditools.midi20.inquiry.CapabilityNegotiator;
 import com.mobileer.miditools.midi20.inquiry.InquiryMessage;
 import com.mobileer.miditools.midi20.inquiry.ProtocolTypeMidiNew;
-import com.mobileer.miditools.midi20.obsolete.PolyTouchDecoder;
-import com.mobileer.miditools.midi20.obsolete.PolyTouchEncoder;
 import com.mobileer.miditools.midi20.protocol.MidiPacketBase;
-import com.mobileer.miditools.midi20.protocol.HDMidiPacket;
 import com.mobileer.miditools.midi20.protocol.PacketDecoder;
 import com.mobileer.miditools.midi20.protocol.PacketEncoder;
+import com.mobileer.miditools.midi20.protocol.RawByteDecoder;
+import com.mobileer.miditools.midi20.protocol.RawByteEncoder;
 import com.mobileer.miditools.midi20.protocol.SysExDecoder;
 import com.mobileer.miditools.midi20.protocol.SysExEncoder;
 import com.mobileer.miditools.midi20.tools.Midi;
@@ -102,21 +101,25 @@ public class ExampleUnitTest {
 
     @Test
     public void testProgramChange() {
-        HDMidiPacket packet = new HDMidiPacket();
-        int program = 37;
-        int bank = 1234;
-        int channel = 14;
+        MidiPacketBase packet = new MidiPacketBase();
+        int program = 0x37;
+        int bank = 0x1234;
+        int channel = 0xE;
 
-        packet.programChange(bank, program);
+        packet.programChange(program, bank);
         packet.setChannel(channel);
         assertEquals(program, packet.getProgram());
         assertEquals(bank, packet.getBank());
         assertEquals(channel, packet.getChannel());
 
+        // Check raw packet bits based on spec.
+        assertEquals(packet.getWord(0), 0x40CE0001);
+        assertEquals(packet.getWord(1), 0x37002434);
     }
+
     @Test
     public void testRPN() {
-        HDMidiPacket packet = new HDMidiPacket();
+        MidiPacketBase packet = new MidiPacketBase();
         int index = (55 << 7) + 93;
         int channel = 14;
         long value = 0x098765432L;
@@ -131,7 +134,7 @@ public class ExampleUnitTest {
 
     @Test
     public void testNRPN() {
-        HDMidiPacket packet = new HDMidiPacket();
+        MidiPacketBase packet = new MidiPacketBase();
         int index = (95 << 7) + 27;
         int channel = 5;
         long value = 0x056473829L;
@@ -145,23 +148,23 @@ public class ExampleUnitTest {
     }
 
     @Test
-    public void testSysExWrapperOneWord() {
+    public void testWrapperOneWord() {
         MidiPacketBase packet = MidiPacketBase.create();
-        packet.setWord(MidiPacketBase.TYPE_UTILITY, 0x00FF0000);
+        packet.setWord(MidiPacketBase.TYPE_UTILITY, 0x00FF0000); // has one word
         testWrappingPacket(packet);
     }
 
     @Test
-    public void testSysExWrapperTwoWords() {
+    public void testWrapperTwoWords() {
         MidiPacketBase packet = MidiPacketBase.create();
         packet.setWord(0, 0x0000FF00);
-        packet.setType(MidiPacketBase.TYPE_CHANNEL_VOICE_HD);
+        packet.setType(MidiPacketBase.TYPE_CHANNEL_VOICE_HD); // has two words
         packet.setWord(1, 0x000000FF);
         testWrappingPacket(packet);
     }
 
     @Test
-    public void testSysExWrapperFourWords() {
+    public void testWrapperFourWords() {
         MidiPacketBase packet = MidiPacketBase.create();
         packet.setWord(0, 0x00A5B6C7);
         packet.setType(0xF); // has 4 words
@@ -172,7 +175,7 @@ public class ExampleUnitTest {
     }
 
     @Test
-    public void testSysExWrapperCC() {
+    public void testWrapperCC() {
         MidiPacketBase packet = MidiPacketBase.create();
         int index = 62;
         long value = 0x012345678;
@@ -180,22 +183,25 @@ public class ExampleUnitTest {
         testWrappingPacket(packet);
     }
 
+    // Test all of the encoding options.
     private void testWrappingPacket(MidiPacketBase packet) {
-        // testWrappingPacket( packet, new SysExEncoder(), new SysExDecoder());
-        testWrappingPacket( packet, new PolyTouchEncoder(), new PolyTouchDecoder());
+        testWrappingPacket(packet,
+                new SysExEncoder(),
+                new SysExDecoder());
+        testWrappingPacket(packet,
+                new RawByteEncoder(),
+                new RawByteDecoder());
     }
 
     private void testWrappingPacket(MidiPacketBase packet,
                                     PacketEncoder encoder, PacketDecoder decoder) {
-        byte[] stream = new byte[64];
         int len = encoder.encode(packet);
-        // int expected = (packet.wordCount() * 5) + 3;
-        // assertEquals(expected, len);
 
         MidiPacketBase other = MidiPacketBase.create();
         assertFalse(packet.equals(other));
 
-        boolean done = decoder.decode(encoder.getBytes(), 0, len, other);
+        decoder.wrap(encoder.getBytes(), 0, len);
+        boolean done = decoder.decode(other);
         System.out.println("packet = " + packet);
         System.out.println("other  = " + other);
         assertTrue(done);
@@ -209,7 +215,6 @@ public class ExampleUnitTest {
         public void onInquiryMessage(InquiryMessage message) {
             this.message = message;
         }
-
     }
 
     @Test
@@ -277,6 +282,7 @@ public class ExampleUnitTest {
         boolean done1;
         boolean done2;
         do {
+            System.out.println("1->2 @ nsec = " + msec);
             negotiator1.setTime(msec);
             negotiator2.setTime(msec);
             message = negotiator1.advanceStateMachine(message);
@@ -298,8 +304,37 @@ public class ExampleUnitTest {
     public void testNegotiation2to2() throws IOException {
         CapabilityNegotiator negotiator1 = new CapabilityNegotiator();
         negotiator1.setSupportedVersion(Midi.VERSION_2_0);
+        negotiator1.setInitiator(true); // INITIATE
         CapabilityNegotiator negotiator2 = new CapabilityNegotiator();
         negotiator2.setSupportedVersion(Midi.VERSION_2_0);
+
+        negotiate(negotiator1, negotiator2);
+        assertEquals(Midi.VERSION_2_0, negotiator1.getNegotiatedVersion());
+        assertEquals(Midi.VERSION_2_0, negotiator2.getNegotiatedVersion());
+    }
+
+    @Test
+    public void testNegotiation2to2ReverseInitiator() throws IOException {
+        CapabilityNegotiator negotiator1 = new CapabilityNegotiator();
+        negotiator1.setSupportedVersion(Midi.VERSION_2_0);
+        CapabilityNegotiator negotiator2 = new CapabilityNegotiator();
+        negotiator2.setSupportedVersion(Midi.VERSION_2_0);
+        negotiator2.setInitiator(true); // INITIATE
+
+        negotiate(negotiator1, negotiator2);
+        assertEquals(Midi.VERSION_2_0, negotiator1.getNegotiatedVersion());
+        assertEquals(Midi.VERSION_2_0, negotiator2.getNegotiatedVersion());
+    }
+
+    @Test
+    public void testNegotiation2to2DualInitiator() throws IOException {
+        CapabilityNegotiator negotiator1 = new CapabilityNegotiator();
+        negotiator1.setSupportedVersion(Midi.VERSION_2_0);
+        negotiator1.setInitiator(true); // INITIATE
+        CapabilityNegotiator negotiator2 = new CapabilityNegotiator();
+        negotiator2.setSupportedVersion(Midi.VERSION_2_0);
+        negotiator2.setInitiator(true); // INITIATE
+
         negotiate(negotiator1, negotiator2);
         assertEquals(Midi.VERSION_2_0, negotiator1.getNegotiatedVersion());
         assertEquals(Midi.VERSION_2_0, negotiator2.getNegotiatedVersion());
@@ -311,6 +346,7 @@ public class ExampleUnitTest {
         negotiator1.setSupportedVersion(Midi.VERSION_1_0);
         CapabilityNegotiator negotiator2 = new CapabilityNegotiator();
         negotiator2.setSupportedVersion(Midi.VERSION_2_0);
+        negotiator2.setInitiator(true);
         negotiate(negotiator1, negotiator2);
         assertEquals(Midi.VERSION_1_0, negotiator1.getNegotiatedVersion());
         assertEquals(Midi.VERSION_1_0, negotiator2.getNegotiatedVersion());
@@ -320,6 +356,7 @@ public class ExampleUnitTest {
     public void testNegotiation2to1() throws IOException {
         CapabilityNegotiator negotiator1 = new CapabilityNegotiator();
         negotiator1.setSupportedVersion(Midi.VERSION_2_0);
+        negotiator1.setInitiator(true);
         CapabilityNegotiator negotiator2 = new CapabilityNegotiator();
         negotiator2.setSupportedVersion(Midi.VERSION_1_0);
         negotiate(negotiator1, negotiator2);

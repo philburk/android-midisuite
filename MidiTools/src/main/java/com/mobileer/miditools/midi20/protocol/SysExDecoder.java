@@ -15,23 +15,31 @@
  */
 
 package com.mobileer.miditools.midi20.protocol;
-
+/**
+ * Decode a MIDI 2.0 packet from a SysEx.
+ * This was used when prototyping MIDI 2.0.
+ * TODO: Delete, no longer needed.
+ */
 public class SysExDecoder implements PacketDecoder {
 
     private byte[] mData;
     private int mValid = 0;
     private int mCursor = 0;
 
-    /**
-     * Fill in packet.
-     * @param packet
-     * @return
-     */
-    @Override
-    public boolean decode(byte[] stream, int offset, int len, MidiPacketBase packet) {
-        // TODO handle partial sysexes
-        mData = stream;
+    public SysExDecoder() {
+    }
+    public SysExDecoder(byte[] data, int offset, int length) {
+        wrap(data, offset, length);
+    }
+
+    public void wrap(byte[] data, int offset, int length) {
+        mData = data;
         mCursor = offset;
+    }
+
+    @Override
+    public boolean decode(MidiPacketBase packet) {
+        // TODO handle partial sysexes
 
         if (read() != 0xF0) return false;
         if (read() != (byte)0x7D) return false;

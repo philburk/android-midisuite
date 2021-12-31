@@ -1,8 +1,10 @@
 package com.mobileer.example.midiscope;
 
-import com.mobileer.miditools.midi20.protocol.HDMidiPacket;
 import com.mobileer.miditools.midi20.protocol.MidiPacketBase;
 
+/**
+ * Format a MIDI 2.0 packet for printing.
+ */
 public class MidiPacketPrinter {
 
     static public String formatPacket(MidiPacketBase packet) {
@@ -42,17 +44,17 @@ public class MidiPacketPrinter {
         int opcode = packet.getOpcode();
         sb.append(", op=" + opcode + ", ");
         switch(opcode) {
-            case HDMidiPacket.OPCODE_NOTE_ON:
+            case MidiPacketBase.OPCODE_NOTE_ON:
                 sb.append("NOTE_ON");
                 sb.append(", note#=" + packet.getNoteNumber());
                 sb.append(", vel=" + packet.getVelocity());
                 break;
-            case HDMidiPacket.OPCODE_NOTE_OFF:
+            case MidiPacketBase.OPCODE_NOTE_OFF:
                 sb.append("NOTE_OFF");
                 sb.append(", note#=" + packet.getNoteNumber());
                 sb.append(", vel=" + packet.getVelocity());
                 break;
-            case HDMidiPacket.OPCODE_PROGRAM_CHANGE:
+            case MidiPacketBase.OPCODE_PROGRAM_CHANGE:
                 sb.append("PROGRAM_CHANGE");
                 sb.append(", p#=" + packet.getProgram());
                 sb.append(", bank=" + packet.getBank());

@@ -34,5 +34,4 @@ public class Midi {
 
     public static final int VERSION_1_0 = 10;
     public static final int VERSION_2_0 = 20;
-    public static final int VERSION_3_0 = 30; // Just for testing protocol negotiation
 }

@@ -16,44 +16,37 @@
 
 package com.mobileer.miditools.midi20.protocol;
 
-/**
- * Pack a MIDI 2.0 packets into a SysEx.
- * This was used when prototyping MIDI 2.0.
- * TODO: Delete, no longer needed.
- */
-public class SysExEncoder implements PacketEncoder {
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 
-    private byte[] mData = new byte[5 * 4 + 3];
-    private int mCursor = 0;
+/**
+ * Encode packets as raw bytes in Big Endian order.
+ */
+public class RawByteEncoder implements PacketEncoder {
+
+    private final ByteArrayOutputStream mData = new ByteArrayOutputStream();
+    private byte pad[] = new byte[4];
 
     @Override
     public int encode(MidiPacketBase packet) {
-        write(0xF0);
-        write(0x7D);
         int numWords = packet.wordCount();
-        int sizeEncoding = numWords - 1;
         for (int i = 0; i < numWords; i++) {
             long word = packet.getWord(i);
-            int combo = sizeEncoding << 4;
-            combo |= ((word >> (31 - 3)) & 0x08);
-            combo |= ((word >> (23 - 2)) & 0x04);
-            combo |= ((word >> (15 - 1)) & 0x02);
-            combo |= ((word >> (7 - 0)) & 0x01);
-            write(combo);
-            write((int)((word >> 24) & 0x7F));
-            write((int)((word >> 16) & 0x7F));
-            write((int)((word >> 8) & 0x7F));
-            write((int)(word & 0x7F));
+            // Convert to bytes in network-order.
+            pad[0] = (byte)(word >> 24);
+            pad[1] = (byte)(word >> 16);
+            pad[2] = (byte)(word >> 8);
+            pad[3] = (byte)(word);
+            try {
+                mData.write(pad);
+            } catch (IOException e) {
+                return -1; // This will almost certainly never happen.
+            }
         }
-        write(0xF7);
-        return mCursor;
-    }
-
-    public void write(int b) {
-        mData[mCursor++] = (byte)b;
+        return numWords * 4;
     }
 
     public byte[] getBytes() {
-        return mData;
+        return mData.toByteArray();
     }
 }

@@ -34,9 +34,9 @@ import com.mobileer.miditools.MidiConstants;
 import com.mobileer.miditools.MidiInputPortSelector;
 import com.mobileer.miditools.MusicKeyboardView;
 import com.mobileer.miditools.midi20.inquiry.NegotiatingThread;
-import com.mobileer.miditools.midi20.obsolete.PolyTouchEncoder;
 import com.mobileer.miditools.midi20.protocol.MidiPacketBase;
 import com.mobileer.miditools.midi20.protocol.PacketEncoder;
+import com.mobileer.miditools.midi20.protocol.RawByteEncoder;
 import com.mobileer.miditools.midi20.protocol.SysExEncoder;
 import com.mobileer.miditools.midi20.tools.Midi;
 
@@ -204,7 +204,7 @@ public class MainActivity extends Activity {
 
     private void programChange2(int channel, int program) {
         MidiPacketBase packet = MidiPacketBase.create();
-        packet.programChange(1234, program);
+        packet.programChange(program, 1234);
         packet.setChannel(channel);
         sendPacket(packet);
     }
@@ -224,8 +224,8 @@ public class MainActivity extends Activity {
     }
 
     private void sendPacket(MidiPacketBase packet) {
-        PacketEncoder encoder = new SysExEncoder();
-        //PacketEncoder encoder = new PolyTouchEncoder();
+        //PacketEncoder encoder = new SysExEncoder();
+        RawByteEncoder encoder = new RawByteEncoder();
         int len = encoder.encode(packet);
         long now = System.nanoTime();
         byte[] data = encoder.getBytes();
