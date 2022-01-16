@@ -22,7 +22,7 @@ import com.mobileer.miditools.midi20.tools.Midi;
 
 public class CapabilityNegotiator {
     static final String TAG = "CapabilityNegotiator";
-    private static final boolean logsEnabled = true;
+    private static final boolean logsEnabled = false;
 
     private static final int STATE_IDLE = 0;
     private static final int STATE_INITIATOR_WAITING_REPLY = 1;
@@ -160,7 +160,7 @@ public class CapabilityNegotiator {
                         break;
                     case InquiryMessage.CI_SUBID2_INITIATE_PROTOCOL_NEGOTIATION:
                         if (mNegotiationIdentifier == inMessage.getMuid()) {
-                            // TODO Collision
+                            // TODO Collision See CI spec 5.7.1
                         }
                         break;
                     case InquiryMessage.CI_SUBID2_REPLY_PROTOCOL_NEGOTIATION:

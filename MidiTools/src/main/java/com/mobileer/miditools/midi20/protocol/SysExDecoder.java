@@ -23,8 +23,9 @@ package com.mobileer.miditools.midi20.protocol;
 public class SysExDecoder implements PacketDecoder {
 
     private byte[] mData;
-    private int mValid = 0;
-    private int mCursor = 0;
+    private int mValid;
+    private int mCursor;
+    private int mLimit;
 
     public SysExDecoder() {
     }
@@ -33,13 +34,16 @@ public class SysExDecoder implements PacketDecoder {
     }
 
     public void wrap(byte[] data, int offset, int length) {
+        System.out.println("wrap: offset = " + offset + ", length = " + length);
         mData = data;
         mCursor = offset;
+        mLimit = offset + length;
     }
 
     @Override
-    public boolean decode(MidiPacketBase packet) {
-        // TODO handle partial sysexes
+    public boolean decode(UniversalMidiPacket packet) {
+        System.out.println("decoder: mCursor = " + mCursor + ", mLimit = " + mLimit);
+        if (mCursor >= mLimit) return false;
 
         if (read() != 0xF0) return false;
         if (read() != (byte)0x7D) return false;
@@ -71,6 +75,7 @@ public class SysExDecoder implements PacketDecoder {
             combo = read();
         }
         System.out.println("combo = " + combo);
+        if (combo != 0x0F7) return false;
         return (combo == 0x0F7);
     }
 
@@ -79,7 +84,9 @@ public class SysExDecoder implements PacketDecoder {
      * @return
      */
     public int read() {
-        return mData[mCursor++] & 0x0FF;
+        int data = mData[mCursor++] & 0x0FF;
+        System.out.println("data = " + data);
+        return data;
     }
 
 }

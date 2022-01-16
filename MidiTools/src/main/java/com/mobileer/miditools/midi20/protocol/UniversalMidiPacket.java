@@ -14,34 +14,33 @@
  * limitations under the License.
  */
 
-/*
- * Copyright 2018 The Android Open Source Project
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
 package com.mobileer.miditools.midi20.protocol;
 
-public class MidiPacketBase {
+/**
+ * Definition for the MIDI 2.0 packet.
+ *
+ * A packet is defined as a block of 1-4 32-bit words.
+ * The packet has 16 Message Types, which include messages
+ * equivalent to all of the MIDI 1.0 message.
+ * This packet can also encode many new messages including
+ * PerNoteControlChange, NoteOns with pitch, etc.
+ */
+
+public class UniversalMidiPacket {
+    /**
+     * The number of words in a packet for each Message Type.
+     */
     private final static int[] PACKET_LENGTHS = {1, 1, 1, 2, 2, 4, 1, 1, 2, 2, 2, 3, 3, 4, 4, 4};
 
     public static final int TYPE_UTILITY = 0;
     public static final int TYPE_SYSTEM = 1;
-    public static final int TYPE_CHANNEL_VOICE = 2; // MIDI 1.0
+    public static final int TYPE_CHANNEL_VOICE_M1 = 2; // MIDI 1.0
     public static final int TYPE_DATA_64 = 3;
-    public static final int TYPE_CHANNEL_VOICE_HD = 4;
+    public static final int TYPE_CHANNEL_VOICE_M2 = 4; // MIDI 2.0
     public static final int TYPE_DATA_128 = 5;
+    // Higher Message Types are reserved, as of January 15, 2022.
 
+    // These opcodes are new to MIDI 2.0.
     public static final int OPCODE_PER_NOTE_RPN = 0x0;
     public static final int OPCODE_PER_NOTE_NRPN = 0x1;
     public static final int OPCODE_RPN = 0x2;
@@ -50,6 +49,7 @@ public class MidiPacketBase {
     public static final int OPCODE_RELATIVE_NRPN = 0x5;
     public static final int OPCODE_PER_NOTE_PITCH_BEND = 0x6;
 
+    // These opcodes are easily translatable to MIDI 1.0 messages.
     public static final int OPCODE_NOTE_OFF = 0x8;
     public static final int OPCODE_NOTE_ON = 0x9;
     public static final int OPCODE_POLY_PRESSURE = 0xA;
@@ -57,33 +57,37 @@ public class MidiPacketBase {
     public static final int OPCODE_PROGRAM_CHANGE = 0xC;
     public static final int OPCODE_CHANNEL_PRESSURE = 0xD;
     public static final int OPCODE_PITCH_BEND = 0xE;
-
+    
     public static final int OPCODE_PER_NOTE_MANAGEMENT = 0xF;
 
     public static final int FLAG_PROGRAM_CHANGE_BANK_VALID = 0x00000001;
 
-
-
-    protected int[] data = new int[4];
+    private final int[] data = new int[4];
 
     public int wordCount() {
         return PACKET_LENGTHS[getType()];
     }
 
-    public static int wordCount(int firstWord) {
-        return PACKET_LENGTHS[(firstWord >> 28) & 0x0F];
-    }
+//    public static int wordCount(int firstWord) {
+//        return PACKET_LENGTHS[(firstWord >> 28) & 0x0F];
+//    }
 
     @Override
     public boolean equals(Object other) {
-        if (other instanceof MidiPacketBase) {
-            MidiPacketBase packet = (MidiPacketBase) other;
+        if (other instanceof UniversalMidiPacket) {
+            UniversalMidiPacket packet = (UniversalMidiPacket) other;
+            if (data[0] != packet.data[0]) return false;
             int wordCount = wordCount();
-            if (wordCount >= 1 && data[0] != packet.data[0]) return false;
-            else if (wordCount >= 2 && data[1] != packet.data[1]) return false;
-            else if (wordCount >= 3 && data[2] != packet.data[2]) return false;
-            else if (wordCount >= 4 && data[3] != packet.data[3]) return false;
-            else return true;
+            if (wordCount >= 2) {
+                if (data[1] != packet.data[1]) return false;
+                if (wordCount >= 3) {
+                    if (data[2] != packet.data[2]) return false;
+                    if (wordCount >= 4) {
+                        if (data[3] != packet.data[3]) return false;
+                    }
+                }
+            }
+            return true;
         }
         else return false;
     }
@@ -104,8 +108,8 @@ public class MidiPacketBase {
         return hash;
     }
 
-    public static MidiPacketBase create() {
-        return new MidiPacketBase();
+    public static UniversalMidiPacket create() {
+        return new UniversalMidiPacket();
     }
 
     protected int getHeader() {
@@ -190,36 +194,23 @@ public class MidiPacketBase {
         setHeaderNibble(channel, 16);
     }
 
-
     protected void setupNote(int opcode, int noteNumber, int velocity) {
-        setType(TYPE_CHANNEL_VOICE_HD);
+        setType(TYPE_CHANNEL_VOICE_M2);
         setOpcode(opcode);
         setHeaderByte(noteNumber, 8);
         setData1MSW(velocity);
-    }
-
-    public boolean isChannelVoiceMessage() {
-        return getType() == TYPE_CHANNEL_VOICE_HD;
     }
 
     public void noteOn(int noteNumber, int velocity) {
         setupNote(OPCODE_NOTE_ON, noteNumber, velocity);
     }
 
-    public boolean isNoteOn() {
-        return isChannelVoiceMessage() && getOpcode() == OPCODE_NOTE_ON;
-    }
-
     public void noteOff(int noteNumber, int velocity) {
         setupNote(OPCODE_NOTE_OFF, noteNumber, velocity);
     }
 
-    public boolean isNoteOff() {
-        return isChannelVoiceMessage() && getOpcode() == OPCODE_NOTE_OFF;
-    }
-
     public void programChange(int program) {
-        setType(TYPE_CHANNEL_VOICE_HD);
+        setType(TYPE_CHANNEL_VOICE_M2);
         setOpcode(OPCODE_PROGRAM_CHANGE);
         setProgram(program);
     }
@@ -229,36 +220,41 @@ public class MidiPacketBase {
         setBank(bank);
     }
 
+    /**
+     * Configure the packet as a Control Change message.
+     * @param index
+     * @param value a normalized value between 0.0 and 1.0
+     */
     public void controlChange(int index, double value) {
-        setType(TYPE_CHANNEL_VOICE_HD);
+        setType(TYPE_CHANNEL_VOICE_M2);
         setOpcode(OPCODE_CONTROL_CHANGE);
         setHeaderL77(index);
         setNormalizedControllerValue(value);
     }
 
     public void RPN(int index, double value) {
-        setType(TYPE_CHANNEL_VOICE_HD);
+        setType(TYPE_CHANNEL_VOICE_M2);
         setOpcode(OPCODE_RPN);
         setHeaderL77(index);
         setNormalizedControllerValue(value);
     }
 
     public void controlChange(int index, long value) {
-        setType(TYPE_CHANNEL_VOICE_HD);
+        setType(TYPE_CHANNEL_VOICE_M2);
         setOpcode(OPCODE_CONTROL_CHANGE);
         setHeaderL77(index);
         data[1] = (int) value;
     }
 
     public void RPN(int index, long value) {
-        setType(TYPE_CHANNEL_VOICE_HD);
+        setType(TYPE_CHANNEL_VOICE_M2);
         setOpcode(OPCODE_RPN);
         setHeaderL77(index);
         data[1] = (int) value;
     }
 
     public void NRPN(int index, long value) {
-        setType(TYPE_CHANNEL_VOICE_HD);
+        setType(TYPE_CHANNEL_VOICE_M2);
         setOpcode(OPCODE_NRPN);
         setHeaderL77(index);
         data[1] = (int) value;
@@ -266,18 +262,6 @@ public class MidiPacketBase {
 
     public int getControllerIndex() {
         return getHeaderL77();
-    }
-
-    public boolean isControlChange() {
-        return isChannelVoiceMessage() && getOpcode() == OPCODE_CONTROL_CHANGE;
-    }
-
-    public boolean isRPN() {
-        return isChannelVoiceMessage() && getOpcode() == OPCODE_RPN;
-    }
-
-    public boolean isNRPN() {
-        return isChannelVoiceMessage() && getOpcode() == OPCODE_NRPN;
     }
 
     /**

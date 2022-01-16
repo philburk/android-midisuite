@@ -28,7 +28,7 @@ public class RawByteEncoder implements PacketEncoder {
     private byte pad[] = new byte[4];
 
     @Override
-    public int encode(MidiPacketBase packet) {
+    public int encode(UniversalMidiPacket packet) {
         int numWords = packet.wordCount();
         for (int i = 0; i < numWords; i++) {
             long word = packet.getWord(i);

@@ -23,7 +23,7 @@ public interface PacketEncoder {
      * @param packet
      * @return number of bytes used to encode the packet
      */
-    int encode(MidiPacketBase packet);
+    int encode(UniversalMidiPacket packet);
 
     /**
      * @return all of the bytes encoded so far

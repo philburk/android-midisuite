@@ -19,9 +19,8 @@ package com.mobileer.example.midiscope;
 import android.media.midi.MidiReceiver;
 import android.util.Log;
 
-import com.mobileer.miditools.midi20.protocol.MidiPacketBase;
+import com.mobileer.miditools.midi20.protocol.UniversalMidiPacket;
 import com.mobileer.miditools.midi20.protocol.RawByteDecoder;
-import com.mobileer.miditools.midi20.tools.Midi;
 
 import java.io.IOException;
 
@@ -36,7 +35,7 @@ public class LoggingReceiver extends MidiReceiver {
     private long mStartTime;
     private ScopeLogger mLogger;
     private long mLastTimeStamp = 0;
-    MidiPacketBase packet = MidiPacketBase.create();
+    UniversalMidiPacket packet = UniversalMidiPacket.create();
     private boolean mUsingPackets;
 
     public LoggingReceiver(ScopeLogger logger) {

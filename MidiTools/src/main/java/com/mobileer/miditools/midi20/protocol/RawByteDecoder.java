@@ -45,11 +45,11 @@ public class RawByteDecoder implements PacketDecoder {
      * @return true if we got a full packet
      */
     @Override
-    public boolean decode(MidiPacketBase packet) {
+    public boolean decode(UniversalMidiPacket packet) {
         if (mIntBuffer.remaining() == 0) return false;
         int i = 0;
         int firstWord = mIntBuffer.get();
-        packet.setWord(i++, firstWord);
+        packet.setWord(i++, firstWord); // Contains MessageType so we know the size.
         int wordsLeft = packet.wordCount() - 1;
         if (wordsLeft > mIntBuffer.remaining()) return false;
         while (wordsLeft > 0) {

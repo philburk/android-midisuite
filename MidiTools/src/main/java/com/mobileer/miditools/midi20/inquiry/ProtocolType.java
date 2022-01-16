@@ -19,6 +19,10 @@ package com.mobileer.miditools.midi20.inquiry;
 import com.mobileer.miditools.midi20.tools.MidiReader;
 import com.mobileer.miditools.midi20.tools.MidiWriter;
 
+/**
+ * Identify a MIDI protocol.
+ * This is used for Capabilities Inquiry.
+ */
 public abstract class ProtocolType {
     public final static int TYPE_MIDI_1_0 = 0;
     public final static int TYPE_MIDI_2 = 1;

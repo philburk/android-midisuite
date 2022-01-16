@@ -16,18 +16,19 @@
 
 package com.mobileer.miditools.midi20.protocol;
 
+import java.io.ByteArrayOutputStream;
+
 /**
  * Pack a MIDI 2.0 packets into a SysEx.
  * This was used when prototyping MIDI 2.0.
  * TODO: Delete, no longer needed.
  */
 public class SysExEncoder implements PacketEncoder {
-
-    private byte[] mData = new byte[5 * 4 + 3];
-    private int mCursor = 0;
+    private final ByteArrayOutputStream mData = new ByteArrayOutputStream();
 
     @Override
-    public int encode(MidiPacketBase packet) {
+    public int encode(UniversalMidiPacket packet) {
+        int originalSize = mData.size();
         write(0xF0);
         write(0x7D);
         int numWords = packet.wordCount();
@@ -46,14 +47,14 @@ public class SysExEncoder implements PacketEncoder {
             write((int)(word & 0x7F));
         }
         write(0xF7);
-        return mCursor;
+        return mData.size() - originalSize;
     }
 
     public void write(int b) {
-        mData[mCursor++] = (byte)b;
+        mData.write(b);
     }
 
     public byte[] getBytes() {
-        return mData;
+        return mData.toByteArray();
     }
 }

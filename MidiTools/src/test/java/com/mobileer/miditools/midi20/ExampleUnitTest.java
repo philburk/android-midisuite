@@ -3,14 +3,13 @@ package com.mobileer.miditools.midi20;
 import com.mobileer.miditools.midi20.inquiry.CapabilityNegotiator;
 import com.mobileer.miditools.midi20.inquiry.InquiryMessage;
 import com.mobileer.miditools.midi20.inquiry.ProtocolTypeMidi20;
-import com.mobileer.miditools.midi20.inquiry.ProtocolTypeMidiNew;
-import com.mobileer.miditools.midi20.protocol.MidiPacketBase;
+import com.mobileer.miditools.midi20.protocol.SysExDecoder;
+import com.mobileer.miditools.midi20.protocol.SysExEncoder;
+import com.mobileer.miditools.midi20.protocol.UniversalMidiPacket;
 import com.mobileer.miditools.midi20.protocol.PacketDecoder;
 import com.mobileer.miditools.midi20.protocol.PacketEncoder;
 import com.mobileer.miditools.midi20.protocol.RawByteDecoder;
 import com.mobileer.miditools.midi20.protocol.RawByteEncoder;
-import com.mobileer.miditools.midi20.protocol.SysExDecoder;
-import com.mobileer.miditools.midi20.protocol.SysExEncoder;
 import com.mobileer.miditools.midi20.tools.Midi;
 import com.mobileer.miditools.midi20.tools.MidiReader;
 import com.mobileer.miditools.midi20.tools.MidiWriter;
@@ -22,6 +21,8 @@ import java.io.IOException;
 
 import static org.junit.Assert.*;
 
+import androidx.annotation.NonNull;
+
 /**
  * Local unit test for Packet.
  *
@@ -32,7 +33,7 @@ public class ExampleUnitTest {
     // Test type, opcode, group, channel
     @Test
     public void packetBasics() {
-        MidiPacketBase packet = MidiPacketBase.create();
+        UniversalMidiPacket packet = UniversalMidiPacket.create();
         assertEquals(0, packet.getType());
         assertEquals(0, packet.getOpcode());
         assertEquals(0, packet.getGroup());
@@ -50,31 +51,30 @@ public class ExampleUnitTest {
     // Test NoteOn and NoteOff encoding
     @Test
     public void testBasicNoteOn() {
-        MidiPacketBase packet = MidiPacketBase.create();
+        UniversalMidiPacket packet = UniversalMidiPacket.create();
         int noteNumber = 62;
         int velocity = 29876;
         packet.noteOn(noteNumber, velocity);
         packet.setChannel(0);
-        assertTrue(packet.isNoteOn());
-        assertFalse(packet.isNoteOff());
         assertEquals(noteNumber, packet.getNoteNumber());
         assertEquals(velocity, packet.getVelocity());
 
+        velocity = 18542;
         packet.noteOff(noteNumber, velocity);
-        assertFalse(packet.isNoteOn());
-        assertTrue(packet.isNoteOff());
+        assertEquals(noteNumber, packet.getNoteNumber());
+        assertEquals(velocity, packet.getVelocity());
     }
 
     @Test
     public void testBasicControlChange() {
-        MidiPacketBase packet = MidiPacketBase.create();
+        UniversalMidiPacket packet = UniversalMidiPacket.create();
         int index = 62;
         int channel = 7;
         long value = 0x012345678;
 
         packet.controlChange(index, value);
         packet.setChannel(channel);
-        assertTrue(packet.isControlChange());
+        assertTrue(packet.getOpcode() == UniversalMidiPacket.OPCODE_CONTROL_CHANGE);
         assertEquals(index, packet.getControllerIndex());
         assertEquals(value, packet.getControllerValue());
         assertEquals(channel, packet.getChannel());
@@ -96,14 +96,14 @@ public class ExampleUnitTest {
         dvalue = 0.254321;
         packet.controlChange(index, dvalue);
 
-        assertTrue(packet.isControlChange());
+        assertTrue(packet.getOpcode() == UniversalMidiPacket.OPCODE_CONTROL_CHANGE);
         assertEquals(index, packet.getControllerIndex());
         assertEquals(dvalue, packet.getNormalizedControllerValue(), 0.001);
     }
 
     @Test
     public void testProgramChange() {
-        MidiPacketBase packet = new MidiPacketBase();
+        UniversalMidiPacket packet = new UniversalMidiPacket();
         int program = 0x37;
         int bank = 0x1234;
         int channel = 0xE;
@@ -121,14 +121,14 @@ public class ExampleUnitTest {
 
     @Test
     public void testRPN() {
-        MidiPacketBase packet = new MidiPacketBase();
+        UniversalMidiPacket packet = new UniversalMidiPacket();
         int index = (55 << 7) + 93;
         int channel = 14;
         long value = 0x098765432L;
 
         packet.RPN(index, value);
         packet.setChannel(channel);
-        assertTrue(packet.isRPN());
+        assertTrue(packet.getOpcode() == UniversalMidiPacket.OPCODE_RPN);
         assertEquals(index, packet.getControllerIndex());
         assertEquals(value, packet.getControllerValue());
         assertEquals(channel, packet.getChannel());
@@ -136,78 +136,122 @@ public class ExampleUnitTest {
 
     @Test
     public void testNRPN() {
-        MidiPacketBase packet = new MidiPacketBase();
+        UniversalMidiPacket packet = new UniversalMidiPacket();
         int index = (95 << 7) + 27;
         int channel = 5;
         long value = 0x056473829L;
 
         packet.NRPN(index, value);
         packet.setChannel(channel);
-        assertTrue(packet.isNRPN());
+        assertTrue(packet.getOpcode() == UniversalMidiPacket.OPCODE_NRPN);
         assertEquals(index, packet.getControllerIndex());
         assertEquals(value, packet.getControllerValue());
         assertEquals(channel, packet.getChannel());
     }
 
-    @Test
-    public void testWrapperOneWord() {
-        MidiPacketBase packet = MidiPacketBase.create();
-        packet.setWord(MidiPacketBase.TYPE_UTILITY, 0x00FF0000); // has one word
-        testWrappingPacket(packet);
+    @NonNull
+    private UniversalMidiPacket createOneWordPacket() {
+        UniversalMidiPacket packet = UniversalMidiPacket.create();
+        packet.setWord(UniversalMidiPacket.TYPE_UTILITY, 0x00FF0000); // has one word
+        return packet;
     }
 
-    @Test
-    public void testWrapperTwoWords() {
-        MidiPacketBase packet = MidiPacketBase.create();
+    @NonNull
+    private UniversalMidiPacket createTwoWordPacket() {
+        UniversalMidiPacket packet = UniversalMidiPacket.create();
         packet.setWord(0, 0x0000FF00);
-        packet.setType(MidiPacketBase.TYPE_CHANNEL_VOICE_HD); // has two words
+        packet.setType(UniversalMidiPacket.TYPE_CHANNEL_VOICE_M2); // has two words
         packet.setWord(1, 0x000000FF);
-        testWrappingPacket(packet);
+        return packet;
     }
 
-    @Test
-    public void testWrapperFourWords() {
-        MidiPacketBase packet = MidiPacketBase.create();
+    @NonNull
+    private UniversalMidiPacket createFourWordPacket() {
+        UniversalMidiPacket packet = UniversalMidiPacket.create();
         packet.setWord(0, 0x00A5B6C7);
         packet.setType(0xF); // has 4 words
         packet.setWord(1, 0x00000080);
         packet.setWord(2, 0xFEDCBA98);
         packet.setWord(3, 0x01234567);
-        testWrappingPacket(packet);
+        return packet;
+    }
+
+    @Test
+    public void testWrapperOneWord() {
+        UniversalMidiPacket packet = createOneWordPacket();
+        testWrappingPackets(packet);
+    }
+
+
+    @Test
+    public void testWrapperTwoWords() {
+        UniversalMidiPacket packet = createTwoWordPacket();
+        testWrappingPackets(packet);
+    }
+
+
+    @Test
+    public void testWrapperFourWords() {
+        UniversalMidiPacket packet = createFourWordPacket();
+        testWrappingPackets(packet);
+    }
+
+
+    @Test
+    public void testWrapperMultiPackets() {
+        UniversalMidiPacket[] packets = new UniversalMidiPacket[]{
+                createFourWordPacket(),
+                createOneWordPacket(),
+                createTwoWordPacket()
+        };
+        testWrappingPackets(packets);
     }
 
     @Test
     public void testWrapperCC() {
-        MidiPacketBase packet = MidiPacketBase.create();
+        UniversalMidiPacket packet = UniversalMidiPacket.create();
         int index = 62;
         long value = 0x012345678;
         packet.controlChange(index, value);
-        testWrappingPacket(packet);
+        testWrappingPackets(packet);
     }
 
     // Test all of the encoding options.
-    private void testWrappingPacket(MidiPacketBase packet) {
-        testWrappingPacket(packet,
+    private void testWrappingPackets(UniversalMidiPacket packet) {
+        UniversalMidiPacket[] packets = new UniversalMidiPacket[]{packet};
+        testWrappingPackets(packets);
+    }
+
+    // Test all of the encoding options.
+    private void testWrappingPackets(UniversalMidiPacket[] packets) {
+        testWrappingPackets(packets,
                 new SysExEncoder(),
                 new SysExDecoder());
-        testWrappingPacket(packet,
+        testWrappingPackets(packets,
                 new RawByteEncoder(),
                 new RawByteDecoder());
     }
 
-    private void testWrappingPacket(MidiPacketBase packet,
-                                    PacketEncoder encoder, PacketDecoder decoder) {
-        int len = encoder.encode(packet);
-
-        MidiPacketBase other = MidiPacketBase.create();
-        assertFalse(packet.equals(other));
-
+    private void testWrappingPackets(UniversalMidiPacket[] packets,
+                                     PacketEncoder encoder, PacketDecoder decoder) {
+        UniversalMidiPacket other = null;
+        int len = 0;
+        for (UniversalMidiPacket packet : packets) {
+            len += encoder.encode(packet);
+        }
+        assertTrue(len > 0);
         decoder.wrap(encoder.getBytes(), 0, len);
-        boolean done = decoder.decode(other);
-        System.out.println("packet = " + packet);
-        System.out.println("other  = " + other);
-        assertTrue(done);
-        assertTrue(packet.equals(other));
+        for (UniversalMidiPacket packet : packets) {
+            other = UniversalMidiPacket.create();
+            assertFalse(packet.equals(other));
+            boolean done = decoder.decode(other);
+            System.out.println("packet = " + packet);
+            System.out.println("packet = " + packet);
+            System.out.println("done  = " + done);
+            assertTrue(done);
+            assertTrue(packet.equals(other));
+        }
+        assertFalse(decoder.decode(other) );
     }
 
     static class TestSysExParser extends SysExParser {

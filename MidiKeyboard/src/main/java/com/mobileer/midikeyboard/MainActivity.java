@@ -34,10 +34,8 @@ import com.mobileer.miditools.MidiConstants;
 import com.mobileer.miditools.MidiInputPortSelector;
 import com.mobileer.miditools.MusicKeyboardView;
 import com.mobileer.miditools.midi20.inquiry.NegotiatingThread;
-import com.mobileer.miditools.midi20.protocol.MidiPacketBase;
-import com.mobileer.miditools.midi20.protocol.PacketEncoder;
+import com.mobileer.miditools.midi20.protocol.UniversalMidiPacket;
 import com.mobileer.miditools.midi20.protocol.RawByteEncoder;
-import com.mobileer.miditools.midi20.protocol.SysExEncoder;
 import com.mobileer.miditools.midi20.tools.Midi;
 
 import java.io.IOException;
@@ -203,27 +201,27 @@ public class MainActivity extends Activity {
     }
 
     private void programChange2(int channel, int program) {
-        MidiPacketBase packet = MidiPacketBase.create();
+        UniversalMidiPacket packet = UniversalMidiPacket.create();
         packet.programChange(program, 1234);
         packet.setChannel(channel);
         sendPacket(packet);
     }
 
     private void noteOn2(int channel, int pitch, int velocity) {
-        MidiPacketBase packet = MidiPacketBase.create();
+        UniversalMidiPacket packet = UniversalMidiPacket.create();
         packet.noteOn(pitch, velocity);
         packet.setChannel(channel);
         sendPacket(packet);
     }
 
     private void noteOff2(int channel, int pitch, int velocity) {
-        MidiPacketBase packet = MidiPacketBase.create();
+        UniversalMidiPacket packet = UniversalMidiPacket.create();
         packet.noteOff(pitch, velocity);
         packet.setChannel(channel);
         sendPacket(packet);
     }
 
-    private void sendPacket(MidiPacketBase packet) {
+    private void sendPacket(UniversalMidiPacket packet) {
         //PacketEncoder encoder = new SysExEncoder();
         RawByteEncoder encoder = new RawByteEncoder();
         int len = encoder.encode(packet);

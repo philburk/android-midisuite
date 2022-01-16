@@ -18,11 +18,20 @@ package com.mobileer.miditools.midi20.protocol;
 
 public interface PacketDecoder {
 
+    /**
+     * Prepare the Decoder to read packets from a region in a byte array.
+     * @param data
+     * @param offset
+     * @param length
+     */
     void wrap(byte[] data, int offset, int length);
 
     /**
+     * Decode the next packet from the byte array.
+     * It will return false when there are no more packets.
+     *
      * @param packet
      * @return true if the packet was fully decoded
      */
-    boolean decode(MidiPacketBase packet);
+    boolean decode(UniversalMidiPacket packet);
 }
