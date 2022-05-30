@@ -26,6 +26,15 @@ package com.mobileer.miditools.midi20.protocol;
  * PerNoteControlChange, NoteOns with pitch, etc.
  */
 
+/*
+TODO Add support for SysEx data packets.
+TODO Negotiation should switch to UMP for SysEx test.
+TODO Fill in missing opcodes.
+TODO add more tests.
+TODO Review APIs.
+TODO Add USB-MIDI 2.0 support to Scope.
+TODO Review
+ */
 public class UniversalMidiPacket {
     /**
      * The number of words in a packet for each Message Type.
@@ -61,6 +70,11 @@ public class UniversalMidiPacket {
     public static final int OPCODE_PER_NOTE_MANAGEMENT = 0xF;
 
     public static final int FLAG_PROGRAM_CHANGE_BANK_VALID = 0x00000001;
+
+    public static final int STATUS_SYSEX_COMPLETE = 0;
+    public static final int STATUS_SYSEX_START = 1;
+    public static final int STATUS_SYSEX_CONTINUE = 2;
+    public static final int STATUS_SYSEX_END = 3;
 
     private final int[] data = new int[4];
 
@@ -171,6 +185,10 @@ public class UniversalMidiPacket {
         setHeader(header);
     }
 
+    /**
+     *
+     * @param value unsigned integer ranging from 0 to 0x0FFFF
+     */
     protected void setData1MSW(int value) {
         int n = data[1];
         n &= ~(0xFFFF << 16); // make hole
@@ -194,6 +212,12 @@ public class UniversalMidiPacket {
         setHeaderNibble(channel, 16);
     }
 
+    /**
+     *
+     * @param opcode
+     * @param noteNumber ranging from 0 to 127
+     * @param velocity ranging from 0 to 0x0FFFF
+     */
     protected void setupNote(int opcode, int noteNumber, int velocity) {
         setType(TYPE_CHANNEL_VOICE_M2);
         setOpcode(opcode);
@@ -201,10 +225,20 @@ public class UniversalMidiPacket {
         setData1MSW(velocity);
     }
 
+    /**
+     * Turn ON a note.
+     * @param noteNumber ranging from 0 to 127
+     * @param velocity ranging from 0 to 0x0FFFF
+     */
     public void noteOn(int noteNumber, int velocity) {
         setupNote(OPCODE_NOTE_ON, noteNumber, velocity);
     }
 
+    /**
+     * Turn OFF a note.
+     * @param noteNumber ranging from 0 to 127
+     * @param velocity ranging from 0 to 0x0FFFF
+     */
     public void noteOff(int noteNumber, int velocity) {
         setupNote(OPCODE_NOTE_OFF, noteNumber, velocity);
     }
@@ -222,7 +256,7 @@ public class UniversalMidiPacket {
 
     /**
      * Configure the packet as a Control Change message.
-     * @param index
+     * @param index ranging from 0 to 127
      * @param value a normalized value between 0.0 and 1.0
      */
     public void controlChange(int index, double value) {
@@ -232,13 +266,11 @@ public class UniversalMidiPacket {
         setNormalizedControllerValue(value);
     }
 
-    public void RPN(int index, double value) {
-        setType(TYPE_CHANNEL_VOICE_M2);
-        setOpcode(OPCODE_RPN);
-        setHeaderL77(index);
-        setNormalizedControllerValue(value);
-    }
-
+    /**
+     * Configure the packet as a Control Change message.
+     * @param index ranging from 0 to 127
+     * @param value ranging from 0 to 0x0FFFFFFFF
+     */
     public void controlChange(int index, long value) {
         setType(TYPE_CHANNEL_VOICE_M2);
         setOpcode(OPCODE_CONTROL_CHANGE);
@@ -246,6 +278,23 @@ public class UniversalMidiPacket {
         data[1] = (int) value;
     }
 
+    /**
+     * Configure the packet as a Registered Controller message.
+     * @param index ranging from 0 to 0x3FFF, includes bank
+     * @param value ranging from 0.0 and 1.0
+     */
+    public void RPN(int index, double value) {
+        setType(TYPE_CHANNEL_VOICE_M2);
+        setOpcode(OPCODE_RPN);
+        setHeaderL77(index);
+        setNormalizedControllerValue(value);
+    }
+
+    /**
+     * Configure the packet as an Registered Controller
+     * @param index ranging from 0 to 0x3FFF, includes bank
+     * @param value ranging from 0 to 0x0FFFFFFFF
+     */
     public void RPN(int index, long value) {
         setType(TYPE_CHANNEL_VOICE_M2);
         setOpcode(OPCODE_RPN);
@@ -253,6 +302,23 @@ public class UniversalMidiPacket {
         data[1] = (int) value;
     }
 
+    /**
+     * Configure the packet as an Assignable Controller message.
+     * @param index ranging from 0 to 0x3FFF, includes bank
+     * @param value ranging from 0.0 and 1.0
+     */
+    public void NRPN(int index, double value) {
+        setType(TYPE_CHANNEL_VOICE_M2);
+        setOpcode(OPCODE_RPN);
+        setHeaderL77(index);
+        setNormalizedControllerValue(value);
+    }
+
+    /**
+     * Configure the packet as an Assignable Controller
+     * @param index ranging from 0 to 0x3FFF, includes bank
+     * @param value ranging from 0 to 0x0FFFFFFFF
+     */
     public void NRPN(int index, long value) {
         setType(TYPE_CHANNEL_VOICE_M2);
         setOpcode(OPCODE_NRPN);
@@ -260,10 +326,233 @@ public class UniversalMidiPacket {
         data[1] = (int) value;
     }
 
+    /**
+     * Configure the packet as a Registered Controller message.
+     * @param index ranging from 0 to 0x3FFF, includes bank
+     * @param value ranging from 0.0 and 1.0
+     */
+    public void relativeRPN(int index, double value) {
+        setType(TYPE_CHANNEL_VOICE_M2);
+        setOpcode(OPCODE_RPN);
+        setHeaderL77(index);
+        setRelativeControllerValue(value);
+    }
+
+    /**
+     * Configure the packet as an Registered Controller
+     * @param index ranging from 0 to 0x3FFF, includes bank
+     * @param value ranging from Integer.MIN to Integer.MAX
+     */
+    public void relativeRPN(int index, int value) {
+        setType(TYPE_CHANNEL_VOICE_M2);
+        setOpcode(OPCODE_RELATIVE_RPN);
+        setHeaderL77(index);
+        data[1] = (int) value;
+    }
+
+    /**
+     * Configure the packet as an Assignable Controller message.
+     * @param index ranging from 0 to 0x3FFF, includes bank
+     * @param value ranging from -1.0 and 1.0
+     */
+    public void relativeNRPN(int index, double value) {
+        setType(TYPE_CHANNEL_VOICE_M2);
+        setOpcode(OPCODE_RELATIVE_NRPN);
+        setHeaderL77(index);
+        setRelativeControllerValue(value);
+    }
+
+    /**
+     * Configure the packet as an Assignable Controller
+     * @param index ranging from 0 to 0x3FFF, includes bank
+     * @param value ranging from Integer.MIN_VALUE to Integer.MAX_VALUE
+     */
+    public void relativeNRPN(int index, int value) {
+        setType(TYPE_CHANNEL_VOICE_M2);
+        setOpcode(OPCODE_RELATIVE_NRPN);
+        setHeaderL77(index);
+        data[1] = value;
+    }
+
+    /**
+     * Configure the packet as a Per-Note Registered Controller
+     * @param noteNumber ranging from 0 to 127
+     * @param index ranging from 0 to 255
+     * @param value ranging from 0 to 0x0FFFFFFFF
+     */
+    public void perNoteRPN(int noteNumber, int index, int value) {
+        setType(TYPE_CHANNEL_VOICE_M2);
+        setOpcode(OPCODE_PER_NOTE_RPN);
+        setNotePlus(noteNumber, index);
+        data[1] = value;
+    }
+
+    /**
+     * Configure the packet as a Per-Note Assignable Controller
+     * @param noteNumber ranging from 0 to 127
+     * @param index ranging from 0 to 255
+     * @param value ranging from 0 to 0x0FFFFFFFF
+     */
+    public void perNoteNRPN(int noteNumber, int index, int value) {
+        setType(TYPE_CHANNEL_VOICE_M2);
+        setOpcode(OPCODE_PER_NOTE_NRPN);
+        setNotePlus(noteNumber, index);
+        data[1] = value;
+    }
+
+    /**
+     * Configure the packet as a Pitch Bend
+     * @param value unsigned bipolar value ranging from 0 to 0x0FFFFFFFF
+     */
+    public void pitchBend(long value) {
+        setType(TYPE_CHANNEL_VOICE_M2);
+        setOpcode(OPCODE_PITCH_BEND);
+        data[1] = (int) value;
+    }
+
+    /**
+     * Configure the packet as a Per-Note Pitch Bend
+     * @param noteNumber ranging from 0 to 127
+     * @param value unsigned bipolar value ranging from 0 to 0x0FFFFFFFF
+     */
+    public void perNotePitchBend(int noteNumber, long value) {
+        setType(TYPE_CHANNEL_VOICE_M2);
+        setOpcode(OPCODE_PER_NOTE_PITCH_BEND);
+        setNoteNumber(noteNumber);
+        data[1] = (int) value;
+    }
+
+    /**
+     * Configure the packet as a Per-Note Management message
+     * @param noteNumber ranging from 0 to 127
+     * @param detach - if true, detach controller from currently active notes
+     * @param reset - reset per-note controllers to their default values
+     */
+    public void perNoteManagement(int noteNumber, boolean detach, boolean reset) {
+        setType(TYPE_CHANNEL_VOICE_M2);
+        setOpcode(OPCODE_PER_NOTE_PITCH_BEND);
+        int flags = reset ? 1 : 0;
+        flags += detach ? 2 : 0;
+        setNotePlus(noteNumber, flags);
+        data[1] = 0; // reserved
+    }
+
     public int getControllerIndex() {
         return getHeaderL77();
     }
 
+    /**
+     *
+     * @param group
+     * @param status
+     * @param payload values must be between 0 and 127
+     * @param offset
+     * @param count
+     */
+    public void systemExclusive7(int group, int status, byte[] payload, int offset, int count) {
+        int word = (TYPE_DATA_64 << 28)
+                | (group << 24)
+                | (status << 20)
+                | (count << 16);
+        setHeader(word);
+        if (count == 0) return;
+        data[0] |= payload[offset++] << 8;
+        if (count == 1) return;
+        data[0] |= payload[offset++];
+        if (count == 2) return;
+        data[1] |= payload[offset++] << 24;
+        if (count == 3) return;
+        data[1] |= payload[offset++] << 16;
+        if (count == 4) return;
+        data[1] |= payload[offset++] << 8;
+        if (count == 5) return;
+        data[1] |= payload[offset];
+    }
+
+    /**
+     *
+     * @param group
+     * @param status
+     * @param streamId
+     * @param payload
+     * @param offset
+     * @param count
+     */
+    public void systemExclusive8(int group, int status, int streamId,
+                                 byte[] payload, int offset, int count) {
+        int word = (TYPE_DATA_128 << 28)
+                | (group << 24)
+                | (status << 20)
+                | (count << 16)
+                | (streamId << 8);
+        setHeader(word);
+        // Encode payload bytes into remaining words.
+        int wordIndex = 0;
+        int shifter = 0;
+        while(count > 0) {
+            data[wordIndex] |= (int)((payload[offset++] & 0xFF) << shifter);
+            shifter -= 8;
+            if (shifter < 0) {
+                shifter = 24;
+                wordIndex++;
+            }
+            count--;
+        }
+    }
+
+    static UniversalMidiPacket[] encodeMultipleSysex7(int group,
+                                                      byte[] payload, int offset, int count) {
+        final int maxPerPacket = 6;
+        if (count <= maxPerPacket) {
+            UniversalMidiPacket packet = new UniversalMidiPacket();
+            packet.systemExclusive7(group, STATUS_SYSEX_COMPLETE,
+                    payload, offset, count);
+            return new UniversalMidiPacket[]{ packet };
+        } else {
+            int numPackets = (count + maxPerPacket - 1) / maxPerPacket;
+            UniversalMidiPacket[] packets = new UniversalMidiPacket[numPackets];
+            int packetIndex = 0;
+            while (count > 0) {
+                int status = (packetIndex == 0) ? STATUS_SYSEX_START
+                        : (count <= maxPerPacket) ? STATUS_SYSEX_END : STATUS_SYSEX_CONTINUE;
+                UniversalMidiPacket packet = new UniversalMidiPacket();
+                int currentCount = Math.min(maxPerPacket, count);
+                packet.systemExclusive7(group, status,
+                        payload, offset, currentCount);
+                offset += currentCount;
+                count -= currentCount;
+                packets[packetIndex++] = packet;
+            }
+            return packets;
+        }
+    }
+
+    static UniversalMidiPacket[] encodeMultipleSysex8(int group, int streamId,
+                                                             byte[] payload, int offset, int count) {
+        final int maxPerPacket = 13;
+        if (count <= maxPerPacket) {
+            UniversalMidiPacket packet = new UniversalMidiPacket();
+            packet.systemExclusive8(group, STATUS_SYSEX_COMPLETE, streamId,
+                    payload, offset, count);
+            return new UniversalMidiPacket[]{ packet };
+        } else {
+            int numPackets = (count + maxPerPacket - 1) / maxPerPacket;
+            UniversalMidiPacket[] packets = new UniversalMidiPacket[numPackets];
+            int packetIndex = 0;
+            while (count > 0) {
+                int status = (packetIndex == 0) ? STATUS_SYSEX_START
+                        : (count <= maxPerPacket) ? STATUS_SYSEX_END : STATUS_SYSEX_CONTINUE;
+                UniversalMidiPacket packet = new UniversalMidiPacket();
+                int currentCount = Math.min(maxPerPacket, count);
+                packet.systemExclusive8(group, status, streamId,
+                        payload, offset, currentCount);
+                offset += currentCount;
+                count -= currentCount;
+                packets[packetIndex++] = packet;
+            }
+            return packets;
+        }
+    }
     /**
      * Split the index into a 7-bit bank and a 7-bit index
      * @param index
@@ -273,6 +562,30 @@ public class UniversalMidiPacket {
         header &= 0xFFFF0000; // make hole
         header |= ((index << 1) & 0x7F00); // bank
         header |= (index & 0x7F); // 7-bit index
+        setHeader(header);
+    }
+
+    /**
+     *
+     * @param noteNumber ranging from 0 to 127
+     * @param other ranging from 0 to 255
+     */
+    private void setNotePlus(int noteNumber, int other) {
+        int header = getHeader();
+        header &= 0xFFFF8000; // make hole
+        header |= (noteNumber & 0x7F) << 8;
+        header |= other & 0xFF; // 8-bit index
+        setHeader(header);
+    }
+
+    /**
+     *
+     * @param noteNumber ranging from 0 to 127
+     */
+    protected void setNoteNumber(int noteNumber) {
+        int header = getHeader();
+        header &= 0xFFFF80FF; // make hole
+        header |= (noteNumber & 0x7F) << 8;
         setHeader(header);
     }
 
@@ -323,9 +636,24 @@ public class UniversalMidiPacket {
         return getControllerValue() * (1.0 / (1L << 32));
     }
 
+    /**
+     * Scale and clip value to fit in 32-bit unsigned data field.
+     * @param value between -1.0 and +1.0
+     */
     public void setNormalizedControllerValue(double value) {
-        long big = (0x0FFFFFFFFL & (long)(value * (1L << 32)));
-        data[1] = (int) (0x0FFFFFFFFL & (long)(value * (1L << 32)));
+        long scaled = (long)(value * (1L << 32));
+        data[1] = (int) (Math.min(0x0FFFFFFFFL,
+                Math.max(0, scaled)));
+    }
+
+    /**
+     *
+     * @param value between -1.0 and +1.0
+     */
+    public void setRelativeControllerValue(double value) {
+        long scaled = (long)(value * Integer.MAX_VALUE);
+        data[1] = (int) (Math.min(Integer.MAX_VALUE,
+                Math.max(Integer.MIN_VALUE, scaled)));
     }
 
     public long getWord(int i) {

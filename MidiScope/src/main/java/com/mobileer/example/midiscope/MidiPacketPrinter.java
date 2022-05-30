@@ -19,14 +19,14 @@ public class MidiPacketPrinter {
             case UniversalMidiPacket.TYPE_SYSTEM:
                 sb.append("UTIL: ");
                 break;
-            case UniversalMidiPacket.TYPE_CHANNEL_VOICE:
-                sb.append("CV: ");
+            case UniversalMidiPacket.TYPE_CHANNEL_VOICE_M1:
+                sb.append("CV1: ");
                 break;
             case UniversalMidiPacket.TYPE_DATA_64:
                 sb.append("DATA64: ");
                 break;
             case UniversalMidiPacket.TYPE_CHANNEL_VOICE_M2:
-                sb.append("CVHD: ");
+                sb.append("CV2: ");
                 formatChannelVoiceHD(sb, packet);
                 break;
             case UniversalMidiPacket.TYPE_DATA_128:

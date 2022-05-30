@@ -149,6 +149,46 @@ public class ExampleUnitTest {
         assertEquals(channel, packet.getChannel());
     }
 
+    @Test
+    public void testSysEx7() {
+        UniversalMidiPacket packet = new UniversalMidiPacket();
+        byte[] payload = new byte[]{ 0x00, 0x00, 0x11, 0x22, 0x33, 0x44, 0x00 };
+        packet.systemExclusive7(5, UniversalMidiPacket.STATUS_SYSEX_COMPLETE,
+                payload, 2, 4);
+        assertEquals(0x35041122, packet.getWord(0));
+        assertEquals(0x33440000, packet.getWord(1));
+    }
+
+    @Test
+    public void testSysEx8() {
+        UniversalMidiPacket packet = new UniversalMidiPacket();
+        byte[] payload = new byte[]{ 0x00, 0x00, 0x11,
+                0x22, 0x33, 0x44, 0x55,
+                0x66, 0x77, (byte)0x88, (byte)0x99,
+                (byte)0xAA, (byte)0xBB, 0x00 };
+        packet.systemExclusive8(9, UniversalMidiPacket.STATUS_SYSEX_COMPLETE, 0x45,
+                payload, 2, 11);
+        assertEquals(0x590B4511, packet.getWord(0));
+        assertEquals(0x22334455, packet.getWord(1));
+        assertEquals(0x66778899, packet.getWord(2));
+        assertEquals(0xAABB0000, packet.getWord(3));
+    }
+
+    @Test
+    public void testMultiSysEx8() {
+        UniversalMidiPacket packet = new UniversalMidiPacket();
+        byte[] payload = new byte[2*13 + 11];
+        for (int i = 0; i < payload.length; i++) {
+            payload[i] = (byte)(0x10 + i);
+        }
+
+        packet.systemExclusive8(5, UniversalMidiPacket.STATUS_SYSEX_COMPLETE,
+                0x34,
+                payload, 2, payload.length - 3);
+        assertEquals(0x35041122, packet.getWord(0));
+        assertEquals(0x33440000, packet.getWord(1));
+    }
+
     @NonNull
     private UniversalMidiPacket createOneWordPacket() {
         UniversalMidiPacket packet = UniversalMidiPacket.create();

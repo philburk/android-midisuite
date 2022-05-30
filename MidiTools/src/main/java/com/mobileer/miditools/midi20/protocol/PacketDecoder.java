@@ -30,6 +30,8 @@ public interface PacketDecoder {
      * Decode the next packet from the byte array.
      * It will return false when there are no more packets.
      *
+     * TODO Consider returning a new packet or null.
+     *
      * @param packet
      * @return true if the packet was fully decoded
      */

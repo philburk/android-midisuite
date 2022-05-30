@@ -192,6 +192,12 @@ public class MainActivity extends Activity {
         return (mNegotiator != null) && (mNegotiator.getNegotiatedVersion() == Midi.VERSION_1_0);
     }
 
+    /**
+     *
+     * @param channel
+     * @param pitch
+     * @param velocity ranging from 0 to 127
+     */
     private void noteOn(int channel, int pitch, int velocity) {
         if (use10()) {
             midiCommand(MidiConstants.STATUS_NOTE_ON +channel, pitch, velocity);
@@ -207,16 +213,23 @@ public class MainActivity extends Activity {
         sendPacket(packet);
     }
 
+    /**
+     *
+     * @param channel
+     * @param pitch
+     * @param velocity ranging form 0 to 127
+     */
     private void noteOn2(int channel, int pitch, int velocity) {
         UniversalMidiPacket packet = UniversalMidiPacket.create();
-        packet.noteOn(pitch, velocity);
+        // scale the velocity use the full 16 bit range of MIDI 2.0
+        packet.noteOn(pitch, velocity << 9);
         packet.setChannel(channel);
         sendPacket(packet);
     }
 
     private void noteOff2(int channel, int pitch, int velocity) {
         UniversalMidiPacket packet = UniversalMidiPacket.create();
-        packet.noteOff(pitch, velocity);
+        packet.noteOff(pitch, velocity << 9);
         packet.setChannel(channel);
         sendPacket(packet);
     }
