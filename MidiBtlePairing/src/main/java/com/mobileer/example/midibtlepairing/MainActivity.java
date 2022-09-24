@@ -20,6 +20,7 @@ import android.Manifest;
 import android.app.Activity;
 import android.bluetooth.BluetoothDevice;
 import android.content.Intent;
+import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.media.midi.MidiDevice;
 import android.media.midi.MidiDeviceInfo;
@@ -195,7 +196,6 @@ public class MainActivity extends Activity {
 
             // Show address and number of ports open.
             StringBuilder sb = new StringBuilder();
-            sb.append(" - ");
             sb.append(deviceTracker.bluetoothDevice.getAddress());
             sb.append(", [" + deviceTracker.inputOpenCount);
             sb.append("][" + deviceTracker.outputOpenCount);
@@ -234,6 +234,7 @@ public class MainActivity extends Activity {
                     Toast.LENGTH_LONG).show();
             bluetoothScanButton.setEnabled(false);
         }
+
     }
 
     private void setupMidi() {
