@@ -7,13 +7,21 @@ android {
         applicationId "com.mobileer.example.midibtlepairing"
         minSdkVersion 23
         targetSdkVersion 29
-        versionCode 3
-        versionName "1.2"
+        versionCode 4
+        versionName "1.3.0"
     }
     buildTypes {
+        debug {
+            versionNameSuffix ".debug"
+            resValue "string", "app_version",
+                    "${defaultConfig.versionName}${versionNameSuffix}"
+        }
         release {
+            resValue "string", "app_version",
+                    "${defaultConfig.versionName}"
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+
         }
     }
 }

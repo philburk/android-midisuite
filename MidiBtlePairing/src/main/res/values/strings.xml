@@ -17,14 +17,15 @@
 <resources>
 
     <string name="app_name">MIDI+BTLE</string>
-    <string name="header_text">Pair with MIDI/BTLE devices.</string>
 
-    <string name="bluetooth_scan">Bluetooth Scan</string>
+    <string name="header_text">Connect with BLE-MIDI devices.</string>
+
+    <string name="bluetooth_scan">Start Bluetooth Scan</string>
 
     <!-- for DeviceScanActivity -->
     <string name="title_devices">MIDI Device Scan</string>
     <string name="explain_btle_location">
-    This app can scan for Bluetooth devices near you.
+    No Connectd Devices.\n\nThis app can scan for Bluetooth devices near you.
     In general, an app could use that information to determine your location,
     although this app does not do that.
     If you allow Location permission then you can turn it off later
@@ -42,4 +43,5 @@
     <string name="menu_stop">Stop</string>
 
     <string name="nothing_paired">Nothing paired.</string>
+    <string name="connected_blemidi_devices">Connected BLE-MIDI Devices:</string>
 </resources>
