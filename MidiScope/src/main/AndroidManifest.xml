@@ -8,7 +8,9 @@
     <application
         android:allowBackup="true"
         android:icon="@mipmap/ic_launcher">
-        <activity android:name="com.mobileer.example.midiscope.MainActivity" android:label="MIDI Scope">
+        <activity android:name="com.mobileer.example.midiscope.MainActivity"
+            android:label="MIDI Scope"
+            android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.DEFAULT" />
@@ -18,7 +20,8 @@
         </activity>
 
         <service android:name="com.mobileer.example.midiscope.MidiScope"
-            android:permission="android.permission.BIND_MIDI_DEVICE_SERVICE">
+            android:permission="android.permission.BIND_MIDI_DEVICE_SERVICE"
+            android:exported="true">
             <intent-filter>
                 <action android:name="android.media.midi.MidiDeviceService" />
             </intent-filter>

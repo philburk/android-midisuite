@@ -26,7 +26,9 @@
         android:icon="@mipmap/ic_launcher"
         android:banner="@mipmap/ic_banner">
 
-        <activity android:name="com.mobileer.midisynthexample.MainActivity" android:label="SynthExample">
+        <activity android:name="com.mobileer.midisynthexample.MainActivity"
+            android:label="SynthExample"
+            android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.DEFAULT" />
@@ -36,7 +38,8 @@
         </activity>
 
         <service android:name="com.mobileer.midisynthexample.MidiSynthDeviceService"
-            android:permission="android.permission.BIND_MIDI_DEVICE_SERVICE">
+            android:permission="android.permission.BIND_MIDI_DEVICE_SERVICE"
+            android:exported="true">
             <intent-filter>
                 <action android:name="android.media.midi.MidiDeviceService" />
             </intent-filter>
