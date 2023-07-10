@@ -27,6 +27,7 @@ import android.media.midi.MidiDeviceInfo;
 import android.media.midi.MidiDeviceStatus;
 import android.media.midi.MidiManager;
 import android.media.midi.MidiManager.DeviceCallback;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Looper;
 import android.util.Log;
@@ -57,15 +58,9 @@ public class MainActivity extends Activity {
 
     private MidiManager mMidiManager;
     private OpenDeviceListAdapter mOpenDeviceListAdapter;
-    private static final int REQUEST_ID_MULTIPLE_PERMISSIONS = 100; // arbitrary
+    private static final int REQUEST_ID_MULTIPLE_PERMISSIONS = 179384; // arbitrary
     private static final int REQUEST_BLUETOOTH_SCAN = 1;
-    String[] PERMISSIONS = {
-            android.Manifest.permission.BLUETOOTH,
-            android.Manifest.permission.BLUETOOTH_ADMIN,
-            android.Manifest.permission.BLUETOOTH_SCAN,
-            android.Manifest.permission.BLUETOOTH_CONNECT,
-            android.Manifest.permission.ACCESS_FINE_LOCATION
-    };
+    private String[] mPermissions;
 
     // Keep track of one BLE-MIDI device.
     static class BluetoothMidiDeviceTracker {
@@ -236,6 +231,18 @@ public class MainActivity extends Activity {
         mOpenDeviceListAdapter = new OpenDeviceListAdapter();
         listView.setAdapter(mOpenDeviceListAdapter);
 
+        // Build list of required permissions based on SDK Version.
+        ArrayList<String> permissions = new ArrayList<String>();
+        permissions.add(android.Manifest.permission.BLUETOOTH);
+        permissions.add(android.Manifest.permission.BLUETOOTH_ADMIN);
+        permissions.add(android.Manifest.permission.ACCESS_COARSE_LOCATION);
+        permissions.add(android.Manifest.permission.ACCESS_FINE_LOCATION);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            permissions.add(android.Manifest.permission.BLUETOOTH_SCAN);
+            permissions.add(android.Manifest.permission.BLUETOOTH_CONNECT);
+        }
+        mPermissions = permissions.toArray(new String[0]);
+
         if (getPackageManager().hasSystemFeature(PackageManager.FEATURE_MIDI)) {
             setupMidi();
         } else {
@@ -329,7 +336,7 @@ public class MainActivity extends Activity {
      * @return return true if all permissions granted
      */
     private boolean hasPermissions() {
-        for (String permission : PERMISSIONS) {
+        for (String permission : mPermissions) {
             if (checkSelfPermission(permission) != PackageManager.PERMISSION_GRANTED) {
                 return false;
             }
@@ -343,7 +350,7 @@ public class MainActivity extends Activity {
             if (hasPermissions()) {
                 openBluetoothScan();
             } else {
-                requestPermissions(PERMISSIONS, REQUEST_ID_MULTIPLE_PERMISSIONS);
+                requestPermissions(mPermissions, REQUEST_ID_MULTIPLE_PERMISSIONS);
             }
         }
     };
