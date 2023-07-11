@@ -27,6 +27,7 @@ import android.media.midi.MidiDeviceInfo;
 import android.media.midi.MidiDeviceStatus;
 import android.media.midi.MidiManager;
 import android.media.midi.MidiManager.DeviceCallback;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Looper;
 import android.util.Log;
@@ -48,7 +49,8 @@ import java.util.ArrayList;
 import java.util.HashMap;
 
 /*
- * App that provides a MIDI echo service.
+ * App that creates a Device for a BLE-MIDI peripheral.
+ * The peripheral can then be used by other apps.
  */
 public class MainActivity extends Activity {
     private static final String TAG = "MidiBtlePairing";
@@ -56,8 +58,11 @@ public class MainActivity extends Activity {
 
     private MidiManager mMidiManager;
     private OpenDeviceListAdapter mOpenDeviceListAdapter;
+    private static final int REQUEST_ID_MULTIPLE_PERMISSIONS = 179384; // arbitrary
     private static final int REQUEST_BLUETOOTH_SCAN = 1;
+    private String[] mPermissions;
 
+    // Keep track of one BLE-MIDI device.
     static class BluetoothMidiDeviceTracker {
         final public BluetoothDevice bluetoothDevice;
         final public MidiDevice midiDevice;
@@ -208,7 +213,6 @@ public class MainActivity extends Activity {
 
             return view;
         }
-
     }
 
     @Override
@@ -226,6 +230,18 @@ public class MainActivity extends Activity {
         // Initializes list view adapter.
         mOpenDeviceListAdapter = new OpenDeviceListAdapter();
         listView.setAdapter(mOpenDeviceListAdapter);
+
+        // Build list of required permissions based on SDK Version.
+        ArrayList<String> permissions = new ArrayList<String>();
+        permissions.add(android.Manifest.permission.BLUETOOTH);
+        permissions.add(android.Manifest.permission.BLUETOOTH_ADMIN);
+        permissions.add(android.Manifest.permission.ACCESS_COARSE_LOCATION);
+        permissions.add(android.Manifest.permission.ACCESS_FINE_LOCATION);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            permissions.add(android.Manifest.permission.BLUETOOTH_SCAN);
+            permissions.add(android.Manifest.permission.BLUETOOTH_CONNECT);
+        }
+        mPermissions = permissions.toArray(new String[0]);
 
         if (getPackageManager().hasSystemFeature(PackageManager.FEATURE_MIDI)) {
             setupMidi();
@@ -315,15 +331,26 @@ public class MainActivity extends Activity {
         mOpenDeviceListAdapter.clear();
     }
 
+    /**
+     *
+     * @return return true if all permissions granted
+     */
+    private boolean hasPermissions() {
+        for (String permission : mPermissions) {
+            if (checkSelfPermission(permission) != PackageManager.PERMISSION_GRANTED) {
+                return false;
+            }
+        }
+        return true;
+    }
+
     private final OnClickListener mBluetoothScanListener = new OnClickListener() {
         @Override
         public void onClick(View v) {
-            if (checkSelfPermission(
-                    Manifest.permission.BLUETOOTH) == PackageManager.PERMISSION_GRANTED) {
+            if (hasPermissions()) {
                 openBluetoothScan();
             } else {
-                requestPermissions(
-                        new String[] { Manifest.permission.BLUETOOTH }, 0);
+                requestPermissions(mPermissions, REQUEST_ID_MULTIPLE_PERMISSIONS);
             }
         }
     };
@@ -338,9 +365,18 @@ public class MainActivity extends Activity {
     @Override
     public void onRequestPermissionsResult(int requestCode,
             String permissions[], int[] grantResults) {
-        if (grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-            openBluetoothScan();
+        if (requestCode != REQUEST_ID_MULTIPLE_PERMISSIONS) {
+            return;
         }
+        for (int result : grantResults) {
+            if (result != PackageManager.PERMISSION_GRANTED) {
+                Toast.makeText(MainActivity.this,
+                                "Permission not granted.", Toast.LENGTH_LONG)
+                        .show();
+                return;
+            }
+        }
+        openBluetoothScan();
     }
 
     @Override

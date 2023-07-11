@@ -8,7 +8,9 @@
     <application
         android:allowBackup="true"
         android:icon="@mipmap/ic_launcher">
-        <activity android:name="com.mobileer.midikeyboard.MainActivity" android:label="MIDI Keyboard">
+        <activity android:name="com.mobileer.midikeyboard.MainActivity"
+            android:label="MIDI Keyboard"
+            android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.DEFAULT" />
