@@ -1,5 +1,6 @@
 gen/
 */gen/
+*/release/
 */*.apk
 */proguard_logs/
 out/
