@@ -20,16 +20,16 @@ This is not an official Google product.
 These apps can also be downloaded from the Google Play App Store.
 
 MidiScope displays MIDI Messages on the screen.
-https://play.google.com/store/apps/details?id=com.mobileer.example.midiscope
+[Play Store](https://play.google.com/store/apps/details?id=com.mobileer.example.midiscope), [Privacy Policy](MidiScope/PrivacyPolicy.md)
 
 MidiKeyboard display a simple on-screen music keyboard.
-https://play.google.com/store/apps/details?id=com.mobileer.midikeyboard
+[Play Store](https://play.google.com/store/apps/details?id=com.mobileer.midikeyboard), [Privacy Policy](MidiKeyboard/PrivacyPolicy.md)
 
 MidiSynthExample is a simple sawtooth MIDI synthesizer.
-https://play.google.com/store/apps/details?id=com.mobileer.midisynthexample
+[Play Store](https://play.google.com/store/apps/details?id=com.mobileer.midisynthexample), [Privacy Policy](MidiSynthExample/PrivacyPolicy.md)
 
 MidiBtlePairing pairs with Bluetooth MIDI devices.
-https://play.google.com/store/apps/details?id=com.mobileer.example.midibtlepairing
+[Play Store](https://play.google.com/store/apps/details?id=com.mobileer.example.midibtlepairing), [Privacy Policy](MidiBtlePairing/PrivacyPolicy.md)
 
 See the README files in the App directories for more information.
 
