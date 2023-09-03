@@ -18,7 +18,8 @@
     <device
         manufacturer="Mobileer"
         product="Scope"
-        name="Mobileer MIDI Scope">
+        name="Mobileer MIDI 2.0 Scope">
         <input-port name="input" />
+        <output-port name="output" />
     </device>
 </devices>

@@ -23,7 +23,7 @@ import android.os.Bundle;
 import com.mobileer.miditools.MidiConstants;
 
 /**
- * Format a MIDI message for printing.
+ * Format a MIDI 1.0 message for printing.
  */
 public class MidiPrinter {
 

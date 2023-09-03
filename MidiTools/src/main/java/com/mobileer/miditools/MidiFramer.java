@@ -17,6 +17,7 @@
 package com.mobileer.miditools;
 
 import android.media.midi.MidiReceiver;
+import android.util.Log;
 
 import java.io.IOException;
 
@@ -30,6 +31,7 @@ import java.io.IOException;
  * Resolves Running Status and interleaved System Real-Time messages.
  */
 public class MidiFramer extends MidiReceiver {
+    private static String TAG = "MidiFramer";
     private MidiReceiver mReceiver;
     private byte[] mBuffer = new byte[3];
     private int mCount;
@@ -52,6 +54,7 @@ public class MidiFramer extends MidiReceiver {
         for (int i = 0; i < count; i++) {
             final byte currentByte = data[offset];
             final int currentInt = currentByte & 0xFF;
+            //Log.i(TAG, "onSend, i = " + i + ", byte = " + currentInt);
             if (currentInt >= 0x80) { // status byte?
                 if (currentInt < 0xF0) { // channel message?
                     mRunningStatus = currentByte;
@@ -59,11 +62,11 @@ public class MidiFramer extends MidiReceiver {
                     mNeeded = MidiConstants.getBytesPerMessage(currentByte) - 1;
                 } else if (currentInt < 0xF8) { // system common?
                     if (currentInt == 0xF0 /* SysEx Start */) {
-                        // Log.i(TAG, "SysEx Start");
+                        //Log.i(TAG, "SysEx Start, offset = " + offset);
                         mInSysEx = true;
                         sysExStartOffset = offset;
                     } else if (currentInt == 0xF7 /* SysEx End */) {
-                        // Log.i(TAG, "SysEx End");
+                        //Log.i(TAG, "SysEx End, offset = " + offset);
                         if (mInSysEx) {
                             mReceiver.send(data, sysExStartOffset,
                                 offset - sysExStartOffset + 1, timestamp);
