@@ -16,7 +16,10 @@
 
 package com.mobileer.midisynthexample;
 
+import android.app.Notification;
+import android.app.PendingIntent;
 import android.content.Context;
+import android.content.Intent;
 import android.media.AudioManager;
 import android.media.midi.MidiDeviceService;
 import android.media.midi.MidiDeviceStatus;
@@ -27,6 +30,7 @@ import com.mobileer.miditools.synth.SynthEngine;
 
 public class MidiSynthDeviceService extends MidiDeviceService {
     private static final String TAG = MainActivity.TAG;
+    private static final int ONGOING_NOTIFICATION_ID = 1793;
     private static SynthEngine mSynthEngine = new SynthEngine();
     private boolean mSynthStarted = false;
     private static MidiSynthDeviceService mInstance;
@@ -35,6 +39,8 @@ public class MidiSynthDeviceService extends MidiDeviceService {
     public void onCreate() {
         super.onCreate();
         mInstance = this;
+
+        startForegroundService();
         queryOptimalAudioSettings();
     }
 
@@ -49,12 +55,35 @@ public class MidiSynthDeviceService extends MidiDeviceService {
     @Override
     public void onDestroy() {
         mSynthEngine.stop();
+        stopForegroundService();
         super.onDestroy();
     }
 
     @Override
     public MidiReceiver[] onGetInputPortReceivers() {
         return new MidiReceiver[] { mSynthEngine };
+    }
+
+    private void startForegroundService() {
+        Intent notificationIntent = new Intent(this, MainActivity.class);
+        PendingIntent pendingIntent =
+                PendingIntent.getActivity(this, 0, notificationIntent, 0);
+
+        Notification notification =
+                //new Notification.Builder(this, CHANNEL_DEFAULT_IMPORTANCE)
+                new Notification.Builder(this)
+                        .setContentTitle(getText(R.string.notification_title))
+                        .setContentText(getText(R.string.notification_message))
+                        .setSmallIcon(R.drawable.icon)
+                        .setContentIntent(pendingIntent)
+                        .setTicker(getText(R.string.ticker_text))
+                        .build();
+
+        startForeground(ONGOING_NOTIFICATION_ID, notification);
+    }
+
+    private void stopForegroundService() {
+        stopForeground(true);
     }
 
     /**
@@ -66,8 +95,8 @@ public class MidiSynthDeviceService extends MidiDeviceService {
             mSynthEngine.start();
             mSynthStarted = true;
         } else if (!status.isInputPortOpen(0) && mSynthStarted){
-            mSynthEngine.stop();
             mSynthStarted = false;
+            mSynthEngine.stop();
         }
     }
 
