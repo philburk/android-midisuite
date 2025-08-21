@@ -1,7 +1,7 @@
 apply plugin: 'com.android.application'
 
 def versionMajor = 1
-def versionMinor = 5
+def versionMinor = 6
 
 android {
     compileSdkVersion 36
@@ -10,7 +10,7 @@ android {
         applicationId "com.mobileer.midikeyboard"
         minSdkVersion 23
         targetSdkVersion 36
-        versionCode 6
+        versionCode 7
         versionName "${versionMajor}.${versionMinor}"
 
         resValue "string", "versionName", "${defaultConfig.versionName}"

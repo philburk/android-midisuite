@@ -1,7 +1,7 @@
 apply plugin: 'com.android.application'
 
 def versionMajor = 1
-def versionMinor = 8
+def versionMinor = 9
 
 android {
     compileSdkVersion 36
@@ -10,7 +10,7 @@ android {
         applicationId "com.mobileer.midisynthexample"
         minSdkVersion 23
         targetSdkVersion 36
-        versionCode 9
+        versionCode 10
         versionName "${versionMajor}.${versionMinor}"
 
         resValue "string", "versionName", "${defaultConfig.versionName}"
