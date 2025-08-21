@@ -1,14 +1,14 @@
 apply plugin: 'com.android.application'
 
 android {
-    compileSdkVersion 33
+    compileSdkVersion 36
 
     defaultConfig {
         applicationId "com.mobileer.example.midibtlepairing"
         minSdkVersion 23
-        targetSdkVersion 33
-        versionCode 5
-        versionName "1.4.0"
+        targetSdkVersion 36
+        versionCode 6
+        versionName "1.4.1"
     }
     buildTypes {
         debug {
@@ -24,6 +24,7 @@ android {
 
         }
     }
+    namespace 'com.mobileer.example.midibtlepairing'
 }
 
 dependencies {

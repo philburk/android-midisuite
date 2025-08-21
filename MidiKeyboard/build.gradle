@@ -1,16 +1,16 @@
 apply plugin: 'com.android.application'
 
 def versionMajor = 1
-def versionMinor = 5
+def versionMinor = 6
 
 android {
-    compileSdkVersion 33
+    compileSdkVersion 36
 
     defaultConfig {
         applicationId "com.mobileer.midikeyboard"
         minSdkVersion 23
-        targetSdkVersion 33
-        versionCode 6
+        targetSdkVersion 36
+        versionCode 7
         versionName "${versionMajor}.${versionMinor}"
 
         resValue "string", "versionName", "${defaultConfig.versionName}"
@@ -21,6 +21,7 @@ android {
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
     }
+    namespace 'com.mobileer.midikeyboard'
 }
 
 dependencies {
