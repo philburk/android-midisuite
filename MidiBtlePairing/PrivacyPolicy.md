@@ -1,4 +1,4 @@
-Privacy Policy for MidiBtlePairing
+Privacy Policy for MIDI BLE Connect
 
 * This app does NOT collect any user data.
 * This app does not display ads.
