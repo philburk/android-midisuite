@@ -19,6 +19,9 @@ package com.mobileer.example.midiscope;
 import android.media.midi.MidiReceiver;
 import android.util.Log;
 
+import com.mobileer.miditools.midi20.protocol.UniversalMidiPacket;
+import com.mobileer.miditools.midi20.protocol.RawByteDecoder;
+
 import java.io.IOException;
 
 /**
@@ -32,10 +35,20 @@ public class LoggingReceiver extends MidiReceiver {
     private long mStartTime;
     private ScopeLogger mLogger;
     private long mLastTimeStamp = 0;
+    UniversalMidiPacket packet = UniversalMidiPacket.create();
+    private boolean mUsingPackets;
 
     public LoggingReceiver(ScopeLogger logger) {
         mStartTime = System.nanoTime();
         mLogger = logger;
+    }
+
+    public boolean isUsingPackets() {
+        return mUsingPackets;
+    }
+
+    public void setUsingPackets(boolean mUsingPackets) {
+        this.mUsingPackets = mUsingPackets;
     }
 
     /*
@@ -59,7 +72,17 @@ public class LoggingReceiver extends MidiReceiver {
         }
         sb.append(MidiPrinter.formatBytes(data, offset, count));
         sb.append(": ");
-        sb.append(MidiPrinter.formatMessage(data, offset, count));
+        if (mUsingPackets) {
+            RawByteDecoder decoder = new RawByteDecoder(data, offset, count);
+            boolean done = decoder.decode(packet);
+            if (done) {
+                Log.i(TAG, "packet = " + packet);
+                sb.append(MidiPacketPrinter.formatPacket(packet));
+            }
+        } else {
+            sb.append(MidiPrinter.formatMessage(data, offset, count));
+        }
+
         String text = sb.toString();
         mLogger.log(text);
         Log.i(TAG, text);

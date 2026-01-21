@@ -81,7 +81,7 @@ public final class MidiDispatcher extends MidiReceiver {
                 receiver.send(msg, offset, count, timestamp);
             } catch (IOException e) {
                 // if the receiver fails we remove the receiver but do not propagate the exception
-                mReceivers.remove(receiver);
+                mReceivers.remove(receiver); // TODO safe?
             }
         }
     }

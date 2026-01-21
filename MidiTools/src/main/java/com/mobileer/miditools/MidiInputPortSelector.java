@@ -21,6 +21,7 @@ import android.media.midi.MidiDevice;
 import android.media.midi.MidiDeviceInfo;
 import android.media.midi.MidiInputPort;
 import android.media.midi.MidiManager;
+import android.media.midi.MidiOutputPort;
 import android.media.midi.MidiReceiver;
 import android.util.Log;
 
@@ -60,12 +61,17 @@ public class MidiInputPortSelector extends MidiPortSelector {
                                 wrapper.getPortIndex());
                         if (mInputPort == null) {
                             Log.e(MidiConstants.TAG, "could not open input port on " + info);
+                        } else {
+                            onInputOpened(mOpenDevice, wrapper.getPortIndex());
                         }
                     }
                 }
             }, null);
             // Don't run the callback on the UI thread because openInputPort might take a while.
         }
+    }
+
+    public void onInputOpened(MidiDevice mOpenDevice, int portIndex) {
     }
 
     public MidiReceiver getReceiver() {
