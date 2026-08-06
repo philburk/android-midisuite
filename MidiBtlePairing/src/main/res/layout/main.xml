@@ -13,47 +13,61 @@
      See the License for the specific language governing permissions and
      limitations under the License.
 -->
-
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:fitsSystemWindows="true"
-    android:orientation="vertical">
-
+    android:orientation="vertical"
+    android:padding="16dp">
 
     <TextView
         android:id="@+id/connected"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_margin="10dp"
-        android:gravity="center_vertical"
+        android:layout_marginBottom="12dp"
         android:text="@string/connected_blemidi_devices"
-        android:textSize="18dp" />
+        android:textColor="?android:attr/textColorPrimary"
+        android:textSize="18sp"
+        android:textStyle="bold" />
 
-    <TextView
-        android:id="@+id/empty"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_margin="10dp"
-        android:gravity="center_vertical"
-        android:text="@string/explain_btle_location" />
-
-    <ListView
-        android:id="@+id/open_device_list"
+    <FrameLayout
         android:layout_width="match_parent"
-        android:layout_height="wrap_content" />
+        android:layout_height="0dp"
+        android:layout_weight="1">
+
+        <TextView
+            android:id="@+id/empty"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:lineSpacingMultiplier="1.2"
+            android:text="@string/explain_btle_location"
+            android:textColor="?android:attr/textColorSecondary"
+            android:textSize="15sp" />
+
+        <ListView
+            android:id="@+id/open_device_list"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:divider="@null"
+            android:dividerHeight="8dp" />
+    </FrameLayout>
 
     <Button
         android:id="@+id/bluetooth_scan"
-        android:layout_width="wrap_content"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="@string/bluetooth_scan" />
+        android:layout_marginTop="16dp"
+        android:padding="12dp"
+        android:text="@string/bluetooth_scan"
+        android:textSize="16sp" />
 
     <TextView
         android:id="@+id/version"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_margin="10dp"
-        android:gravity="center_vertical"
-        android:text="@string/app_version" />
+        android:layout_gravity="center_horizontal"
+        android:layout_marginTop="12dp"
+        android:text="@string/app_version"
+        android:textColor="?android:attr/textColorTertiary"
+        android:textSize="13sp" />
 </LinearLayout>

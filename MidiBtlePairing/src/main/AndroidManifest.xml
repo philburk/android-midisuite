@@ -1,5 +1,4 @@
-<manifest xmlns:android="http://schemas.android.com/apk/res/android"
-        package="com.mobileer.example.midibtlepairing">
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
 
     <uses-feature android:name="android.software.leanback" android:required="false" />
     <uses-feature android:name="android.hardware.bluetooth_le" android:required="true"/>
@@ -15,7 +14,8 @@
 
     <application
         android:allowBackup="true"
-        android:icon="@mipmap/ic_launcher">
+        android:icon="@mipmap/ic_launcher"
+        android:theme="@style/AppTheme">
         <activity android:name="com.mobileer.example.midibtlepairing.MainActivity"
             android:label="MIDI+BTLE"
             android:exported="true">
@@ -28,7 +28,7 @@
         </activity>
 
         <activity android:name="com.mobileer.example.midibtlepairing.DeviceScanActivity"
-              android:label="@string/app_name" />
+              android:label="@string/title_devices" />
 
     </application>
 </manifest>

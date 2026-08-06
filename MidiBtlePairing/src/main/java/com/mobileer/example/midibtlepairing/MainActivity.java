@@ -20,7 +20,6 @@ import android.Manifest;
 import android.app.Activity;
 import android.bluetooth.BluetoothDevice;
 import android.content.Intent;
-import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.media.midi.MidiDevice;
 import android.media.midi.MidiDeviceInfo;
@@ -29,6 +28,7 @@ import android.media.midi.MidiManager;
 import android.media.midi.MidiManager.DeviceCallback;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Handler;
 import android.os.Looper;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -41,24 +41,25 @@ import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.mobileer.example.midibtlepairing.R;
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.app.ActivityCompat;
+import androidx.core.content.ContextCompat;
 
 import java.io.Closeable;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 
-/*
+/**
  * App that creates a Device for a BLE-MIDI peripheral.
  * The peripheral can then be used by other apps.
  */
-public class MainActivity extends Activity {
+public class MainActivity extends AppCompatActivity {
     private static final String TAG = "MidiBtlePairing";
-    private static final String PACKAGE_NAME = "com.mobileer.example.midibtlepairing";
 
     private MidiManager mMidiManager;
     private OpenDeviceListAdapter mOpenDeviceListAdapter;
-    private static final int REQUEST_ID_MULTIPLE_PERMISSIONS = 179384; // arbitrary
+    private static final int REQUEST_ID_MULTIPLE_PERMISSIONS = 179384;
     private static final int REQUEST_BLUETOOTH_SCAN = 1;
     private String[] mPermissions;
 
@@ -69,10 +70,6 @@ public class MainActivity extends Activity {
         public int inputOpenCount;
         public int outputOpenCount;
 
-        /**
-         * @param bluetoothDevice
-         * @param midiDevice
-         */
         public BluetoothMidiDeviceTracker(BluetoothDevice bluetoothDevice,
                 MidiDevice midiDevice) {
             this.bluetoothDevice = bluetoothDevice;
@@ -103,14 +100,15 @@ public class MainActivity extends Activity {
 
     // Adapter for holding open devices.
     private class OpenDeviceListAdapter extends BaseAdapter {
-        private ArrayList<BluetoothMidiDeviceTracker> mOpenDevices;
-        private LayoutInflater mInflator;
-        private HashMap<MidiDeviceInfo, BluetoothMidiDeviceTracker> mInfoTrackerMap = new HashMap<MidiDeviceInfo, BluetoothMidiDeviceTracker>();
+        private final ArrayList<BluetoothMidiDeviceTracker> mOpenDevices;
+        private final LayoutInflater mInflater;
+        private final HashMap<MidiDeviceInfo, BluetoothMidiDeviceTracker> mInfoTrackerMap =
+                new HashMap<MidiDeviceInfo, BluetoothMidiDeviceTracker>();
 
         public OpenDeviceListAdapter() {
             super();
             mOpenDevices = new ArrayList<BluetoothMidiDeviceTracker>();
-            mInflator = MainActivity.this.getLayoutInflater();
+            mInflater = MainActivity.this.getLayoutInflater();
         }
 
         public void addDevice(BluetoothMidiDeviceTracker deviceTracker) {
@@ -122,20 +120,20 @@ public class MainActivity extends Activity {
             }
         }
 
-        /**
-         * @param info
-         */
         public void remove(MidiDeviceInfo info) {
-            BluetoothMidiDeviceTracker deviceTracker = mInfoTrackerMap
-                    .get(info);
+            BluetoothMidiDeviceTracker deviceTracker = mInfoTrackerMap.get(info);
             if (deviceTracker != null) {
                 mOpenDevices.remove(deviceTracker);
+                mInfoTrackerMap.remove(info);
                 notifyDataSetChanged();
             }
         }
 
         public BluetoothMidiDeviceTracker getDevice(int position) {
-            return mOpenDevices.get(position);
+            if (position >= 0 && position < mOpenDevices.size()) {
+                return mOpenDevices.get(position);
+            }
+            return null;
         }
 
         public BluetoothMidiDeviceTracker getDevice(MidiDeviceInfo info) {
@@ -166,48 +164,48 @@ public class MainActivity extends Activity {
         @Override
         public View getView(final int i, View view, ViewGroup viewGroup) {
             ViewHolder viewHolder;
-            // General ListView optimization code.
             if (view == null) {
-                view = mInflator.inflate(R.layout.listitem_open_device, null);
+                view = mInflater.inflate(R.layout.listitem_open_device, viewGroup, false);
                 viewHolder = new ViewHolder();
-                viewHolder.deviceStatus = (TextView) view
-                        .findViewById(R.id.device_status);
-                viewHolder.deviceName = (TextView) view
-                        .findViewById(R.id.device_name);
-                viewHolder.closeButton = (Button) view
-                        .findViewById(R.id.close_button);
-                viewHolder.closeButton
-                        .setOnClickListener(new OnClickListener() {
-                            @Override
-                            public void onClick(View v) {
-                                BluetoothMidiDeviceTracker deviceTracker = mOpenDevices
-                                        .get(i);
-                                doClose(deviceTracker.midiDevice);
-                                ((Button) v).setEnabled(false);
-                            }
-                        });
+                viewHolder.deviceStatus = view.findViewById(R.id.device_status);
+                viewHolder.deviceName = view.findViewById(R.id.device_name);
+                viewHolder.closeButton = view.findViewById(R.id.close_button);
                 view.setTag(viewHolder);
             } else {
                 viewHolder = (ViewHolder) view.getTag();
             }
 
-            BluetoothMidiDeviceTracker deviceTracker = mOpenDevices.get(i);
-            final String deviceName = deviceTracker.bluetoothDevice.getName();
-            if (deviceName != null && deviceName.length() > 0) {
+            final BluetoothMidiDeviceTracker deviceTracker = mOpenDevices.get(i);
+            viewHolder.closeButton.setOnClickListener(new OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    doClose(deviceTracker.midiDevice);
+                    v.setEnabled(false);
+                }
+            });
+
+            String deviceName = null;
+            try {
+                deviceName = deviceTracker.bluetoothDevice.getName();
+            } catch (SecurityException e) {
+                Log.e(TAG, "SecurityException getting device name", e);
+            }
+
+            if (deviceName != null && !deviceName.trim().isEmpty()) {
                 viewHolder.deviceName.setText(deviceName);
             } else {
-                viewHolder.deviceName.setText("--");
+                viewHolder.deviceName.setText(R.string.unknown_device);
             }
 
             // Show address and number of ports open.
             StringBuilder sb = new StringBuilder();
             sb.append(deviceTracker.bluetoothDevice.getAddress());
-            sb.append(", [" + deviceTracker.inputOpenCount);
-            sb.append("][" + deviceTracker.outputOpenCount);
+            sb.append(", [In: ").append(deviceTracker.inputOpenCount);
+            sb.append("] [Out: ").append(deviceTracker.outputOpenCount);
             sb.append("]");
 
             if ((deviceTracker.inputOpenCount + deviceTracker.outputOpenCount) > 0) {
-                sb.append(" in use");
+                sb.append(" (in use)");
             }
             viewHolder.deviceStatus.setText(sb.toString());
 
@@ -220,11 +218,11 @@ public class MainActivity extends Activity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.main);
 
-        Log.i(TAG, "app started ========================");
-        Button bluetoothScanButton = (Button) findViewById(R.id.bluetooth_scan);
+        Log.i(TAG, "MidiBtlePairing MainActivity started");
+        Button bluetoothScanButton = findViewById(R.id.bluetooth_scan);
         bluetoothScanButton.setOnClickListener(mBluetoothScanListener);
 
-        ListView listView = (ListView) findViewById(R.id.open_device_list);
+        ListView listView = findViewById(R.id.open_device_list);
         listView.setEmptyView(findViewById(R.id.empty));
 
         // Initializes list view adapter.
@@ -233,13 +231,14 @@ public class MainActivity extends Activity {
 
         // Build list of required permissions based on SDK Version.
         ArrayList<String> permissions = new ArrayList<String>();
-        permissions.add(android.Manifest.permission.BLUETOOTH);
-        permissions.add(android.Manifest.permission.BLUETOOTH_ADMIN);
-        permissions.add(android.Manifest.permission.ACCESS_COARSE_LOCATION);
-        permissions.add(android.Manifest.permission.ACCESS_FINE_LOCATION);
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-            permissions.add(android.Manifest.permission.BLUETOOTH_SCAN);
-            permissions.add(android.Manifest.permission.BLUETOOTH_CONNECT);
+            permissions.add(Manifest.permission.BLUETOOTH_SCAN);
+            permissions.add(Manifest.permission.BLUETOOTH_CONNECT);
+        } else {
+            permissions.add(Manifest.permission.BLUETOOTH);
+            permissions.add(Manifest.permission.BLUETOOTH_ADMIN);
+            permissions.add(Manifest.permission.ACCESS_COARSE_LOCATION);
+            permissions.add(Manifest.permission.ACCESS_FINE_LOCATION);
         }
         mPermissions = permissions.toArray(new String[0]);
 
@@ -250,12 +249,11 @@ public class MainActivity extends Activity {
                     Toast.LENGTH_LONG).show();
             bluetoothScanButton.setEnabled(false);
         }
-
     }
 
     private void setupMidi() {
-        // Setup MIDI
         mMidiManager = (MidiManager) getSystemService(MIDI_SERVICE);
+        if (mMidiManager == null) return;
 
         mMidiManager.registerDeviceCallback(new DeviceCallback() {
             @Override
@@ -267,28 +265,25 @@ public class MainActivity extends Activity {
             @Override
             public void onDeviceStatusChanged(final MidiDeviceStatus status) {
                 MidiDeviceInfo info = status.getDeviceInfo();
-                BluetoothMidiDeviceTracker tracker = mOpenDeviceListAdapter
-                        .getDevice(info);
+                BluetoothMidiDeviceTracker tracker = mOpenDeviceListAdapter.getDevice(info);
                 if (tracker != null) {
                     tracker.outputOpenCount = 0;
                     for (int i = 0; i < info.getOutputPortCount(); i++) {
-                        tracker.outputOpenCount += status
-                                .getOutputPortOpenCount(i);
+                        tracker.outputOpenCount += status.getOutputPortOpenCount(i);
                     }
                     tracker.inputOpenCount = 0;
                     for (int i = 0; i < info.getInputPortCount(); i++) {
-                        tracker.inputOpenCount += status.isInputPortOpen(i) ? 1
-                                : 0;
+                        tracker.inputOpenCount += status.isInputPortOpen(i) ? 1 : 0;
                     }
                     mOpenDeviceListAdapter.notifyDataSetChanged();
                 }
             }
-        }, new android.os.Handler(Looper.getMainLooper()));
+        }, new Handler(Looper.getMainLooper()));
     }
 
     @Override
     public void onDestroy() {
-        mOpenDeviceListAdapter.clear();
+        closeAll();
         super.onDestroy();
     }
 
@@ -310,34 +305,20 @@ public class MainActivity extends Activity {
         });
     }
 
-    private void closeBluetoothDevice(BluetoothMidiDeviceTracker tracker) {
-        if (tracker != null) {
-            Log.i(TAG, "Closing Bluetooth MIDI device, info = "
-                    + tracker.midiDevice.getInfo());
-        }
-        doClose(tracker.midiDevice);
-    }
-
     public void closeAll() {
         for (int i = 0; i < mOpenDeviceListAdapter.getCount(); i++) {
-            BluetoothMidiDeviceTracker tracker = mOpenDeviceListAdapter
-                    .getDevice(i);
+            BluetoothMidiDeviceTracker tracker = mOpenDeviceListAdapter.getDevice(i);
             if (tracker != null) {
-                Log.i(TAG, "Closing Bluetooth MIDI device, info = "
-                        + tracker.midiDevice.getInfo());
+                Log.i(TAG, "Closing Bluetooth MIDI device: " + tracker.bluetoothDevice.getAddress());
+                doClose(tracker.midiDevice);
             }
-            doClose(tracker.midiDevice);
         }
         mOpenDeviceListAdapter.clear();
     }
 
-    /**
-     *
-     * @return return true if all permissions granted
-     */
     private boolean hasPermissions() {
         for (String permission : mPermissions) {
-            if (checkSelfPermission(permission) != PackageManager.PERMISSION_GRANTED) {
+            if (ContextCompat.checkSelfPermission(this, permission) != PackageManager.PERMISSION_GRANTED) {
                 return false;
             }
         }
@@ -350,21 +331,20 @@ public class MainActivity extends Activity {
             if (hasPermissions()) {
                 openBluetoothScan();
             } else {
-                requestPermissions(mPermissions, REQUEST_ID_MULTIPLE_PERMISSIONS);
+                ActivityCompat.requestPermissions(MainActivity.this, mPermissions, REQUEST_ID_MULTIPLE_PERMISSIONS);
             }
         }
     };
 
     private void openBluetoothScan() {
-        Intent intent = new Intent();
-        intent.setAction(Intent.ACTION_PICK);
-        intent.setClassName(PACKAGE_NAME, PACKAGE_NAME + ".DeviceScanActivity");
+        Intent intent = new Intent(this, DeviceScanActivity.class);
         startActivityForResult(intent, REQUEST_BLUETOOTH_SCAN);
     }
 
     @Override
     public void onRequestPermissionsResult(int requestCode,
             String permissions[], int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
         if (requestCode != REQUEST_ID_MULTIPLE_PERMISSIONS) {
             return;
         }
@@ -382,14 +362,17 @@ public class MainActivity extends Activity {
     @Override
     protected void onActivityResult(int requestCode, int resultCode,
             Intent data) {
-        if (requestCode == REQUEST_BLUETOOTH_SCAN && resultCode == RESULT_OK) {
-            final BluetoothDevice fBluetoothDevice = (BluetoothDevice) data
-                    .getParcelableExtra("device");
-            if (fBluetoothDevice != null) {
-                Log.i(TAG, "Bluetooth device name = "
-                        + fBluetoothDevice.getName()
-                        + ", address = "
-                        + fBluetoothDevice.getAddress());
+        super.onActivityResult(requestCode, resultCode, data);
+        if (requestCode == REQUEST_BLUETOOTH_SCAN && resultCode == RESULT_OK && data != null) {
+            final BluetoothDevice fBluetoothDevice;
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                fBluetoothDevice = data.getParcelableExtra("device", BluetoothDevice.class);
+            } else {
+                fBluetoothDevice = (BluetoothDevice) data.getParcelableExtra("device");
+            }
+
+            if (fBluetoothDevice != null && mMidiManager != null) {
+                Log.i(TAG, "Opening Bluetooth MIDI device: " + fBluetoothDevice.getAddress());
                 mMidiManager.openBluetoothDevice(fBluetoothDevice,
                         new MidiManager.OnDeviceOpenedListener() {
                             @Override
@@ -406,6 +389,7 @@ public class MainActivity extends Activity {
             try {
                 closeable.close();
             } catch (IOException e) {
+                Log.e(TAG, "Error closing MidiDevice", e);
             }
         }
     }
