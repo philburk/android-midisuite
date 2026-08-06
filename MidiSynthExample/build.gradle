@@ -1,7 +1,7 @@
 apply plugin: 'com.android.application'
 
 def versionMajor = 1
-def versionMinor = 9
+def versionMinor = 10
 
 android {
     compileSdkVersion 36
@@ -10,7 +10,7 @@ android {
         applicationId "com.mobileer.midisynthexample"
         minSdkVersion 23
         targetSdkVersion 36
-        versionCode 10
+        versionCode 11
         versionName "${versionMajor}.${versionMinor}"
 
         resValue "string", "versionName", "${defaultConfig.versionName}"
@@ -18,14 +18,17 @@ android {
     buildTypes {
         release {
             minifyEnabled false
-            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
         }
+    }
+    buildFeatures {
+        resValues true
     }
     namespace 'com.mobileer.midisynthexample'
 }
 
 dependencies {
     implementation fileTree(include: ['*.jar'], dir: 'libs')
-    implementation 'androidx.appcompat:appcompat:1.1.0'
+    implementation 'androidx.appcompat:appcompat:1.7.0'
     implementation project(':MidiTools')
 }

@@ -44,4 +44,6 @@
 
     <string name="nothing_paired">Nothing paired.</string>
     <string name="connected_blemidi_devices">Connected BLE-MIDI Devices:</string>
+    <string name="scanning">Scanning for Bluetooth MIDI devices…</string>
+    <string name="no_devices_found">No Bluetooth MIDI devices found.\nMake sure your device is powered on and in pairing mode.</string>
 </resources>

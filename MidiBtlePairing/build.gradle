@@ -7,8 +7,8 @@ android {
         applicationId "com.mobileer.example.midibtlepairing"
         minSdkVersion 23
         targetSdkVersion 36
-        versionCode 8
-        versionName "1.4.3"
+        versionCode 9
+        versionName "1.4.4"
     }
     buildTypes {
         debug {
@@ -20,14 +20,16 @@ android {
             resValue "string", "app_version",
                     "${defaultConfig.versionName}"
             minifyEnabled false
-            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
-
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
         }
+    }
+    buildFeatures {
+        resValues true
     }
     namespace 'com.mobileer.example.midibtlepairing'
 }
 
 dependencies {
     implementation fileTree(dir: 'libs', include: ['*.jar'])
-    implementation 'androidx.appcompat:appcompat:1.1.0'
+    implementation 'androidx.appcompat:appcompat:1.7.0'
 }
